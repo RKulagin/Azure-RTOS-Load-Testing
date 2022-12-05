@@ -60,18 +60,15 @@ void MX_ThreadX_Init(void);
 #define APP_STACK_SIZE                           512
 #define APP_BYTE_POOL_SIZE                       (12 * 1024)
 
-#define THREAD_ONE_PRIO                          10
+#define THREAD_ONE_PRIO                          5
 #define THREAD_ONE_PREEMPTION_THRESHOLD          THREAD_ONE_PRIO
-#define THREAD_TWO_PRIO                          10
-#define THREAD_TWO_PREEMPTION_THRESHOLD          9
-#define MAIN_THREAD_PRIO                         5
+
+#define MAIN_THREAD_PRIO                         10
 #define MAIN_THREAD_PREEMPTION_THRESHOLD         MAIN_THREAD_PRIO
 
-#define NEW_THREAD_TWO_PRIO                      8
-#define NEW_THREAD_TWO_PREEMPTION_THRESHOLD      8
 
-#define THREAD_ONE_EVT                           0x01
-#define THREAD_TWO_EVT                           0x02
+#define THREAD_MAIN_EVT                           0x01
+
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */

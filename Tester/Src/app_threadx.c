@@ -45,14 +45,12 @@
 /* USER CODE BEGIN PV */
 TX_THREAD MainThread;
 TX_THREAD ThreadOne;
-TX_THREAD ThreadTwo;
 TX_EVENT_FLAGS_GROUP EventFlag;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 void ThreadOne_Entry(ULONG thread_input);
-void ThreadTwo_Entry(ULONG thread_input);
 void MainThread_Entry(ULONG thread_input);
 void App_Delay(uint32_t Delay);
 /* USER CODE END PFP */
@@ -102,22 +100,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
     ret = TX_THREAD_ERROR;
   }
 
-  /* Allocate the stack for ThreadTwo.  */
-  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
-                       APP_STACK_SIZE, TX_NO_WAIT) != TX_SUCCESS)
-  {
-    ret = TX_POOL_ERROR;
-  }
-  
-  /* Create ThreadTwo.  */
-  if (tx_thread_create(&ThreadTwo, "Thread Two", ThreadTwo_Entry, 0,  
-                       pointer, APP_STACK_SIZE, 
-                       THREAD_TWO_PRIO, THREAD_TWO_PREEMPTION_THRESHOLD,
-                       TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
-  {
-    ret = TX_THREAD_ERROR;
-  }
-  
+
   /* Create the event flags group.  */
   if (tx_event_flags_create(&EventFlag, "Event Flag") != TX_SUCCESS)
   {
@@ -154,52 +137,25 @@ void MX_ThreadX_Init(void)
   */
 void MainThread_Entry(ULONG thread_input)
 {
-  UINT old_prio = 0;
-  UINT old_pre_threshold = 0;
-  ULONG   actual_flags = 0;
-  uint8_t count = 0; 
   (void) thread_input;
+  uint8_t count = 0;
   
-  while (count < 3)
-  {
-    count++;
-    if (tx_event_flags_get(&EventFlag, THREAD_ONE_EVT, TX_OR_CLEAR, 
-                           &actual_flags, TX_WAIT_FOREVER) != TX_SUCCESS)
-    {
-      Error_Handler();
-    }
-    else
-    {
-      /* Update the priority and preemption threshold of ThreadTwo 
-      to allow the preemption of ThreadOne */
-      tx_thread_priority_change(&ThreadTwo, NEW_THREAD_TWO_PRIO, &old_prio);
-      tx_thread_preemption_change(&ThreadTwo, NEW_THREAD_TWO_PREEMPTION_THRESHOLD, &old_pre_threshold);
-      
-      if (tx_event_flags_get(&EventFlag, THREAD_TWO_EVT, TX_OR_CLEAR, 
-                             &actual_flags, TX_WAIT_FOREVER) != TX_SUCCESS)
-      {
-        Error_Handler();
-      }
-      else
-      {
-        /* Reset the priority and preemption threshold of ThreadTwo */ 
-        tx_thread_priority_change(&ThreadTwo, THREAD_TWO_PRIO, &old_prio);
-        tx_thread_preemption_change(&ThreadTwo, THREAD_TWO_PREEMPTION_THRESHOLD, &old_pre_threshold);
-      }
-    }
-  }
-  
-  /* Destroy ThreadOne and ThreadTwo */
-  tx_thread_terminate(&ThreadOne);
-  tx_thread_terminate(&ThreadTwo);
-  
-  /* Infinite loop */
   while(1)
-  {
-    BSP_LED_Toggle(LED_BLUE);
-    /* Thread sleep for 1s */
-    tx_thread_sleep(100);
-  }
+    {
+      BSP_LED_Toggle(LED_BLUE);
+      /* Delay for 500ms (App_Delay is used to avoid context change). */
+      App_Delay(50);
+      count ++;
+      if (count == 6)
+      {
+        count = 0;
+        if (tx_event_flags_set(&EventFlag, THREAD_MAIN_EVT, TX_OR) != TX_SUCCESS)
+        {
+          Error_Handler();
+        }
+      }
+    }
+  
 }
 
 /**
@@ -209,51 +165,21 @@ void MainThread_Entry(ULONG thread_input)
   */
 void ThreadOne_Entry(ULONG thread_input)
 {
-  (void) thread_input;
-  uint8_t count = 0;
-  /* Infinite loop */
-  while(1)
-  {
-    BSP_LED_Toggle(LED_BLUE);
-    /* Delay for 500ms (App_Delay is used to avoid context change). */
-    App_Delay(50);
-    count ++;
-    if (count == 10)
-    {
-      count = 0;
-      if (tx_event_flags_set(&EventFlag, THREAD_ONE_EVT, TX_OR) != TX_SUCCESS)
-      {
-        Error_Handler();
-      }
-    }
-  }
-}
-
-/**
-  * @brief  Function implementing the ThreadTwo thread.
-  * @param  thread_input: Not used 
-  * @retval None
-  */
-void ThreadTwo_Entry(ULONG thread_input)
-{
-  (void) thread_input;
-  uint8_t count = 0;
-  /* Infinite loop */
-  while (1)
-  {
-    BSP_LED_Toggle(LED_BLUE);
-    /* Delay for 200ms (App_Delay is used to avoid context change). */
-    App_Delay(20);
-    count ++;
-    if (count == 25)
-    {
-      count = 0;
-      if (tx_event_flags_set(&EventFlag, THREAD_TWO_EVT, TX_OR) != TX_SUCCESS)
-      {
-        Error_Handler();
-      }
-    }
-  }
+	ULONG   actual_flags = 0;
+	while (1)
+	  {
+	    if (tx_event_flags_get(&EventFlag, THREAD_MAIN_EVT, TX_OR_CLEAR,
+	                           &actual_flags, TX_WAIT_FOREVER) != TX_SUCCESS)
+	    {
+	      Error_Handler();
+	    }
+	    else
+	    {
+	    	BSP_LED_Toggle(LED_GREEN);
+	    	      /* Delay for 500ms (App_Delay is used to avoid context change). */
+//	    	      App_Delay(50);
+	    }
+	  }
 }
 
 /**

@@ -88,6 +88,7 @@ int main(void)
   /* Initialize LED */
   BSP_LED_Init(LED_BLUE);
   BSP_LED_Init(LED_RED);
+  BSP_LED_Init(LED_GREEN);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
