@@ -20,6 +20,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "app_threadx.h"
+#include "stm32f4xx.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -46,6 +48,12 @@
 TX_THREAD MainThread;
 TX_THREAD ThreadOne;
 TX_EVENT_FLAGS_GROUP EventFlag;
+
+GPIO_InitTypeDef gpio;
+USART_InitTypeDef usart;
+uint8_t sendData[8];
+uint8_t bytesToSend = 8;
+uint8_t sendDataCounter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -177,7 +185,10 @@ void ThreadOne_Entry(ULONG thread_input)
 	    {
 	    	BSP_LED_Toggle(LED_GREEN);
 	    	      /* Delay for 500ms (App_Delay is used to avoid context change). */
-//	    	      App_Delay(50);
+	    	  // App_Delay(50);
+
+
+
 	    }
 	  }
 }
@@ -193,3 +204,4 @@ void App_Delay(uint32_t Delay)
   while ((tx_time_get() - initial_time) < Delay);
 }
 /* USER CODE END 1 */
+
