@@ -94,10 +94,11 @@ int main(void)
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-
+  pc_messages_queue = PC_Messages_Queue_Init();
   /* USER CODE END 2 */
 
-  MX_ThreadX_Init();
+//  MX_ThreadX_Init();
+
 
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
@@ -105,7 +106,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  if (pc_messages_queue->start != pc_messages_queue->end){
+		  uint8_t* message = Pop(pc_messages_queue);
+		  CDC_Transmit_FS(message, sizeof(message));
+		  free(message);
+	  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
