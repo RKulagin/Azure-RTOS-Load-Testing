@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Tx_Thread_Creation</name>
+	<name>Tester</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -44,6 +44,11 @@
 			<name>Application/User/main.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Src/main.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/pc_messages_queue.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Src/pc_messages_queue.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/stm32f4xx_hal_msp.c</name>
@@ -146,9 +151,44 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pcd.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_ll_usb.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_pcd_ex.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c</locationURI>
+		</link>
+		<link>
 			<name>Drivers/BSP/STM32F4xx_Nucleo/stm32f4xx_nucleo_144.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/STM32F4xx_Nucleo_144/stm32f4xx_nucleo_144.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/USB_DEVICE/App/usb_device.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/USB_DEVICE/App/usb_device.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/USB_DEVICE/App/usbd_cdc_if.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/USB_DEVICE/App/usbd_cdc_if.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/USB_DEVICE/App/usbd_desc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/USB_DEVICE/App/usbd_desc.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/USB_DEVICE/Target/usbd_conf.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/USB_DEVICE/Target/usbd_conf.c</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/ThreadX/RTOS/ThreadX/Core/tx_block_allocate.c</name>
@@ -964,6 +1004,26 @@
 			<name>Middlewares/ThreadX/RTOS/ThreadX/Core/txe_timer_info_get.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Middlewares/ST/threadx/common/src/txe_timer_info_get.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
