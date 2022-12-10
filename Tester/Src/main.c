@@ -108,7 +108,7 @@ int main(void)
     /* USER CODE END WHILE */
 	  if (pc_messages_queue->start != pc_messages_queue->end){
 		  uint8_t* message = Pop(pc_messages_queue);
-		  CDC_Transmit_FS(message, sizeof(message));
+		  CDC_Transmit_FS(message, strlen(message));
 		  free(message);
 	  }
     /* USER CODE BEGIN 3 */
