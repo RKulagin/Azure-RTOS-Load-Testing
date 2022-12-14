@@ -53,16 +53,23 @@ void PeriphCommonClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USART6_UART_Init(void);
+void Queue_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint8_t RX_data[256];
-volatile uint8_t buffer[256];
-volatile uint8_t size_of_rx_data;
-volatile uint8_t uart3_received;
+struct Queue*  PC_RX_messages_queue;
+struct Queue*  PC_TX_messages_queue;
+
+volatile uint8_t UART3_RX_data[256];
+struct Queue*  UART3_RX_messages_queue;
+volatile uint8_t UART3_size_of_rx_data;
+
+volatile uint8_t UART6_RX_data[256];
+struct Queue*  UART6_RX_messages_queue;
+volatile uint8_t UART6_size_of_rx_data;
 /* USER CODE END 0 */
 
 /**
@@ -94,16 +101,17 @@ int main(void)
   /* Initialize LED */
   BSP_LED_Init(LED_BLUE);
   BSP_LED_Init(LED_RED);
+  BSP_LED_Init(LED_GREEN);
   /* USER CODE END SysInit */
-
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  pc_messages_queue = PC_Messages_Queue_Init();
+  Queue_Init();
   /* USER CODE END 2 */
+  BSP_LED_Toggle(LED_BLUE);
 
 //  MX_ThreadX_Init();
 
@@ -118,16 +126,16 @@ int main(void)
 		  uint8_t* message = Pop(pc_messages_queue);
 		  const uint8_t message_length = strlen(message);
 
-		  HAL_UART_Transmit(&huart3, &message_length, 1, 100);
-		  HAL_UART_Transmit(&huart3, message,strlen(message), 1000);
+		  HAL_UART_Transmit(&huart6, &message_length, 1, 100);
+		  HAL_UART_Transmit(&huart6, message,strlen(message), 1000);
+		  message_length = 0;
 		  free(message);
 
-		  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
+		  HAL_UART_Receive_IT(&huart6, (uint8_t*)&RX_data, 1);
 	  }
-	  if (uart3_received == 1){
-		  CDC_Transmit_FS(buffer, strlen(buffer));
-		  uart3_received = 0;
-		  memset(buffer, 256, 0);
+	  if (uart6_received == 1){
+		  CDC_Transmit_FS(buffer, size_of_tx_to_pc_data);
+		  uart6_received = 0;
 	  }
 
     /* USER CODE BEGIN 3 */
@@ -136,21 +144,24 @@ int main(void)
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
- if (huart == &huart3) {
+ if (huart == &huart6) {
   if (size_of_rx_data == 0){
 	  size_of_rx_data = RX_data[0];
 	  RX_data[0] = 0;
-	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, size_of_rx_data);
+	  HAL_UART_Receive_IT(&huart6, (uint8_t*)&RX_data, size_of_rx_data);
   }
   else {
 	  strcpy(buffer, RX_data);
+	  size_of_tx_to_pc_data = size_of_rx_data;
 	  size_of_rx_data = 0;
 	  memset(RX_data, 0, 256);
-	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
-	  uart3_received = 1;
+	  HAL_UART_Receive_IT(&huart6, (uint8_t*)&RX_data, 1);
+	  uart6_received = 1;
   }
  }
 }
+
+
 
 /**
   * @brief System Clock Configuration
@@ -251,7 +262,7 @@ static void MX_USART3_UART_Init(void)
   }
   /* USER CODE BEGIN USART3_Init 2 */
   size_of_rx_data = 0;
-  uart3_received = 0;
+  // uart3_received = 0;
   /* USER CODE END USART3_Init 2 */
 
 }
@@ -284,7 +295,8 @@ static void MX_USART6_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART6_Init 2 */
-
+  uart6_received = 0;
+  size_of_rx_data = 0;
   /* USER CODE END USART6_Init 2 */
 
 }
@@ -383,6 +395,18 @@ __HAL_RCC_GPIOC_CLK_ENABLE();
 }
 
 /* USER CODE BEGIN 4 */
+/**
+ * @brief  Initialize all queues used in the application
+ * @note This function is called from the main() function before starting all message acceptors
+ * @param  None
+ * @retval None
+*/
+void Queue_Init(void){
+  PC_RX_messages_queue = Messages_Queue_Init();
+  PC_TX_messages_queue = Messages_Queue_Init();
+  UART3_RX_messages_queue = Messages_Queue_Init();
+  UART6_RX_messages_queue = Messages_Queue_Init();
+}
 
 /* USER CODE END 4 */
 

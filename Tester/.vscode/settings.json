@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "main.h": "c",
+        "app_threadx.h": "c",
+        "stm32f4xx_hal.h": "c",
+        "stm32f4xx_nucleo_144.h": "c",
+        "pc_messages_queue.h": "c"
+    }
+}
