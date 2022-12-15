@@ -30,7 +30,7 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
 #include "usbd_def.h"
-
+#include "app_threadx.h"
 /* USER CODE BEGIN INCLUDE */
 
 /* USER CODE END INCLUDE */

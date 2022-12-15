@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "usbd_def.h": "c",
+        "main.h": "c",
+        "app_threadx.h": "c"
+    }
+}

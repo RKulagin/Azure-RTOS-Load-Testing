@@ -4,6 +4,9 @@
         "app_threadx.h": "c",
         "stm32f4xx_hal.h": "c",
         "stm32f4xx_nucleo_144.h": "c",
-        "pc_messages_queue.h": "c"
+        "pc_messages_queue.h": "c",
+        "usb_device.h": "c",
+        "stm32f429xx.h": "c",
+        "messages_queue.h": "c"
     }
 }

@@ -71,10 +71,19 @@ void MX_ThreadX_Init(void);
 
 #define THREAD_ONE_EVT                           0x01
 #define THREAD_TWO_EVT                           0x02
+
+#define QUEUE_UART3_SENDER_SIZE                  256
+#define QUEUE_UART3_RECEIVER_SIZE                256
+#define QUEUE_PC_SENDER_SIZE                     256
+#define QUEUE_PC_RECEIVER_SIZE                   256
+
+
+
+#define UART3_MAX_MESSAGE_SIZE                   256
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */
-
+extern TX_QUEUE QueuePCReceiver;
 /* USER CODE END 1 */
 
 #ifdef __cplusplus

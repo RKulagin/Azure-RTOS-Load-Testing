@@ -49,6 +49,12 @@ TX_THREAD ThreadUART3Receiver;
 TX_THREAD ThreadPCSender;
 TX_THREAD ThreadPCReceiver;
 TX_EVENT_FLAGS_GROUP EventFlag;
+
+TX_QUEUE QueueUART3Sender;
+TX_QUEUE QueueUART3Receiver;
+TX_QUEUE QueuePCSender;
+TX_QUEUE QueuePCReceiver;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -161,6 +167,58 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   }
   /* USER CODE END App_ThreadX_Init */
 
+  /* Allocate queue for UART3 Sender*/
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                       QUEUE_UART3_SENDER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    ret = TX_POOL_ERROR;
+  }
+  /* Create queue for UART3 Sender*/
+  if (tx_queue_create(&QueueUART3Sender, "UART3 Sender Queue", TX_1_ULONG, pointer,
+                      QUEUE_UART3_SENDER_SIZE) != TX_SUCCESS)
+  {
+    ret = TX_QUEUE_ERROR;
+  }
+
+  /* Allocate queue for UART3 Receiver*/
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                       QUEUE_UART3_RECEIVER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    ret = TX_POOL_ERROR;
+  }
+  /* Create queue for UART3 Receiver*/
+  if (tx_queue_create(&QueueUART3Receiver, "UART3 Receiver Queue", TX_1_ULONG, pointer,
+                      QUEUE_UART3_RECEIVER_SIZE) != TX_SUCCESS)
+  {
+    ret = TX_QUEUE_ERROR;
+  }
+
+  /* Allocate queue for PC Sender*/
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                       QUEUE_PC_SENDER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    ret = TX_POOL_ERROR;
+  }
+  /* Create queue for PC Sender*/
+  if (tx_queue_create(&QueuePCSender, "PC Sender Queue", TX_1_ULONG, pointer,
+                      QUEUE_PC_SENDER_SIZE) != TX_SUCCESS)
+  {
+    ret = TX_QUEUE_ERROR;
+  }
+
+  /* Allocate queue for PC Receiver*/
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                       QUEUE_PC_RECEIVER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    ret = TX_POOL_ERROR;
+  }
+  /* Create queue for PC Receiver*/
+  if (tx_queue_create(&QueuePCReceiver, "PC Receiver Queue", TX_1_ULONG, pointer,
+                      QUEUE_PC_RECEIVER_SIZE) != TX_SUCCESS)
+  {
+    ret = TX_QUEUE_ERROR;
+  }
+
   return ret;
 }
 
@@ -199,8 +257,60 @@ void MainThread_Entry(ULONG thread_input)
  * @retval  None
 */
 void ThreadUART3Sender_Entry(ULONG thread_input){
+  UNUSED(thread_input);
+  uint8_t *QueueUART3SenderData = malloc(UART3_MAX_MESSAGE_SIZE);
+  // Wait until QueueUART3Sender is not empty
+  while(1){
+    tx_queue_receive(&QueueUART3Sender, &QueueUART3SenderData, TX_WAIT_FOREVER);
+    HAL_UART_Transmit(&huart3, QueueUART3SenderData, strlen(QueueUART3SenderData), 1000);
+  }
+  free (QueueUART3SenderData);
 }
 
+/**
+ * @brief   Function implementing the ThreadUART3Receiver thread.
+ * @param   thread_input: Not used
+ * @retval  None
+*/
+void ThreadUART3Receiver_Entry(ULONG thread_input){
+  UNUSED(thread_input);
+  uint8_t *QueueUART3ReceiverData;
+  // Wait until QueueUART3Receiver is not empty
+  while(1){
+    tx_queue_receive(&QueueUART3Receiver, &QueueUART3ReceiverData, TX_WAIT_FOREVER);
+    tx_queue_send(&QueuePCSender, &QueueUART3ReceiverData, TX_WAIT_FOREVER);
+  }
+}
+
+/**
+ * @brief   Function implementing the ThreadPCSender thread.
+ * @param   thread_input: Not used
+ * @retval  None
+*/
+void ThreadPCSender_Entry(ULONG thread_input){
+  UNUSED(thread_input);
+  uint8_t *QueuePCSenderData;
+  // Wait until QueuePCSender is not empty
+  while(1){
+    tx_queue_receive(&QueuePCSender, &QueuePCSenderData, TX_WAIT_FOREVER);
+    CDC_Transmit_FS(QueuePCSenderData, strlen(QueuePCSenderData));
+  }
+}
+
+/**
+ * @brief   Function implementing the ThreadPCReceiver thread.
+ * @param   thread_input: Not used
+ * @retval  None
+*/
+void ThreadPCReceiver_Entry(ULONG thread_input){
+  UNUSED(thread_input);
+  uint8_t *QueuePCReceiverData;
+  // Wait until QueuePCReceiver is not empty
+  while(1){
+    tx_queue_receive(&QueuePCReceiver, &QueuePCReceiverData, TX_WAIT_FOREVER);
+    tx_queue_send(&QueueUART3Sender, &QueuePCReceiverData, TX_WAIT_FOREVER);
+  }
+}
 
 /**
   * @brief  Function implementing the ThreadTwo thread.

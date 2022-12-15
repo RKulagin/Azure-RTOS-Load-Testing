@@ -113,7 +113,7 @@ int main(void)
   /* USER CODE END 2 */
   BSP_LED_Toggle(LED_BLUE);
 
-//  MX_ThreadX_Init();
+  MX_ThreadX_Init();
 
 
   /* We should never get here as control is now taken by the scheduler */
@@ -122,21 +122,21 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  if (pc_messages_queue->start != pc_messages_queue->end){
-		  uint8_t* message = Pop(pc_messages_queue);
-		  const uint8_t message_length = strlen(message);
-
-		  HAL_UART_Transmit(&huart6, &message_length, 1, 100);
-		  HAL_UART_Transmit(&huart6, message,strlen(message), 1000);
-		  message_length = 0;
-		  free(message);
-
-		  HAL_UART_Receive_IT(&huart6, (uint8_t*)&RX_data, 1);
-	  }
-	  if (uart6_received == 1){
-		  CDC_Transmit_FS(buffer, size_of_tx_to_pc_data);
-		  uart6_received = 0;
-	  }
+//	  if (pc_messages_queue->start != pc_messages_queue->end){
+//		  uint8_t* message = Pop(pc_messages_queue);
+//		  const uint8_t message_length = strlen(message);
+//
+//		  HAL_UART_Transmit(&huart6, &message_length, 1, 100);
+//		  HAL_UART_Transmit(&huart6, message,strlen(message), 1000);
+//		  message_length = 0;
+//		  free(message);
+//
+//		  HAL_UART_Receive_IT(&huart6, (uint8_t*)&RX_data, 1);
+//	  }
+//	  if (uart6_received == 1){
+//		  CDC_Transmit_FS(buffer, size_of_tx_to_pc_data);
+//		  uart6_received = 0;
+//	  }
 
     /* USER CODE BEGIN 3 */
   }
@@ -144,19 +144,19 @@ int main(void)
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
- if (huart == &huart6) {
-  if (size_of_rx_data == 0){
-	  size_of_rx_data = RX_data[0];
-	  RX_data[0] = 0;
-	  HAL_UART_Receive_IT(&huart6, (uint8_t*)&RX_data, size_of_rx_data);
+ if (huart == &huart3) {
+  if (UART3_size_of_rx_data == 0){
+    UART3_size_of_rx_data = UART3_RX_data[0];
+	  UART3_RX_data[0] = 0;
+	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&UART3_RX_data, UART3_size_of_rx_data);
   }
   else {
-	  strcpy(buffer, RX_data);
-	  size_of_tx_to_pc_data = size_of_rx_data;
-	  size_of_rx_data = 0;
-	  memset(RX_data, 0, 256);
-	  HAL_UART_Receive_IT(&huart6, (uint8_t*)&RX_data, 1);
-	  uart6_received = 1;
+    char* data = malloc(UART3_size_of_rx_data+1);
+	  strcpy(data, UART3_RX_data);
+	  tx_queue_send(&PC_RX_messages_queue, &data, TX_NO_WAIT);
+	  UART3_size_of_rx_data = 0;
+	  memset(UART3_RX_data, 0, 256);
+	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&UART3_RX_data, 1);
   }
  }
 }
@@ -261,7 +261,7 @@ static void MX_USART3_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
-  size_of_rx_data = 0;
+//  size_of_rx_data = 0;
   // uart3_received = 0;
   /* USER CODE END USART3_Init 2 */
 
@@ -295,8 +295,8 @@ static void MX_USART6_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART6_Init 2 */
-  uart6_received = 0;
-  size_of_rx_data = 0;
+//  uart6_received = 0;
+//  size_of_rx_data = 0;
   /* USER CODE END USART6_Init 2 */
 
 }

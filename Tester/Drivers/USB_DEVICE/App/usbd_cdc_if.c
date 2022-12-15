@@ -263,7 +263,9 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
-  Push(pc_messages_queue, Buf);
+  uint8_t * message = malloc((*Len) + 1);
+  memcpy(message, Buf, *Len);
+  tx_queue_send(&QueuePCReceiver, &message, TX_NO_WAIT);
   return (USBD_OK);
   /* USER CODE END 6 */
 }
