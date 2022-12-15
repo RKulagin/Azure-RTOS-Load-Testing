@@ -112,6 +112,8 @@ int main(void)
   Queue_Init();
   /* USER CODE END 2 */
   BSP_LED_Toggle(LED_BLUE);
+//  HAL_UART_Transmit(&huart3, "1", 1, 100);
+  HAL_UART_Receive_IT(&huart3, (uint8_t*)&UART3_RX_data, 1);
 
   MX_ThreadX_Init();
 
@@ -153,7 +155,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   else {
     char* data = malloc(UART3_size_of_rx_data+1);
 	  strcpy(data, UART3_RX_data);
-	  tx_queue_send(&PC_RX_messages_queue, &data, TX_NO_WAIT);
+	  tx_queue_send(&QueuePCSender, &data, TX_NO_WAIT);
 	  UART3_size_of_rx_data = 0;
 	  memset(UART3_RX_data, 0, 256);
 	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&UART3_RX_data, 1);

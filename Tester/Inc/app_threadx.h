@@ -58,7 +58,7 @@ void MX_ThreadX_Init(void);
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define APP_STACK_SIZE                           512
-#define APP_BYTE_POOL_SIZE                       (12 * 1024)
+#define APP_BYTE_POOL_SIZE                       (1024 * 1024)
 
 #define THREAD_ONE_PRIO                          1
 #define THREAD_ONE_PREEMPTION_THRESHOLD          THREAD_ONE_PRIO
@@ -84,6 +84,8 @@ void MX_ThreadX_Init(void);
 
 /* USER CODE BEGIN 1 */
 extern TX_QUEUE QueuePCReceiver;
+extern TX_QUEUE QueuePCSender;
+
 /* USER CODE END 1 */
 
 #ifdef __cplusplus

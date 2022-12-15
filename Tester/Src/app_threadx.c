@@ -167,31 +167,39 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   }
   /* USER CODE END App_ThreadX_Init */
 
-  /* Allocate queue for UART3 Sender*/
-  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
-                       QUEUE_UART3_SENDER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
-  {
-    ret = TX_POOL_ERROR;
-  }
-  /* Create queue for UART3 Sender*/
-  if (tx_queue_create(&QueueUART3Sender, "UART3 Sender Queue", TX_1_ULONG, pointer,
-                      QUEUE_UART3_SENDER_SIZE) != TX_SUCCESS)
-  {
-    ret = TX_QUEUE_ERROR;
-  }
-
-  /* Allocate queue for UART3 Receiver*/
-  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
-                       QUEUE_UART3_RECEIVER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
-  {
-    ret = TX_POOL_ERROR;
-  }
-  /* Create queue for UART3 Receiver*/
-  if (tx_queue_create(&QueueUART3Receiver, "UART3 Receiver Queue", TX_1_ULONG, pointer,
-                      QUEUE_UART3_RECEIVER_SIZE) != TX_SUCCESS)
-  {
-    ret = TX_QUEUE_ERROR;
-  }
+  ret = tx_byte_allocate(byte_pool, (VOID **) &pointer,
+          QUEUE_UART3_SENDER_SIZE, TX_NO_WAIT);
+  ret = tx_queue_create(&QueueUART3Sender, "UART3 Sender Queue", TX_1_ULONG, pointer,
+          QUEUE_UART3_SENDER_SIZE);
+  ret = tx_byte_allocate(byte_pool, (VOID **) &pointer,
+          QUEUE_UART3_RECEIVER_SIZE, TX_NO_WAIT);
+  ret = tx_queue_create(&QueueUART3Receiver, "UART3 Receiver Queue", TX_1_ULONG, pointer,
+          QUEUE_UART3_RECEIVER_SIZE);
+//  /* Allocate queue for UART3 Sender*/
+//  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+//                       QUEUE_UART3_SENDER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+//  {
+//    ret = TX_POOL_ERROR;
+//  }
+//  /* Create queue for UART3 Sender*/
+//  if (tx_queue_create(&QueueUART3Sender, "UART3 Sender Queue", TX_1_ULONG, pointer,
+//                      QUEUE_UART3_SENDER_SIZE) != TX_SUCCESS)
+//  {
+//    ret = TX_QUEUE_ERROR;
+//  }
+//
+//  /* Allocate queue for UART3 Receiver*/
+//  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+//                       QUEUE_UART3_RECEIVER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+//  {
+//    ret = TX_POOL_ERROR;
+//  }
+//  /* Create queue for UART3 Receiver*/
+//  if (tx_queue_create(&QueueUART3Receiver, "UART3 Receiver Queue", TX_1_ULONG, pointer,
+//                      QUEUE_UART3_RECEIVER_SIZE) != TX_SUCCESS)
+//  {
+//    ret = TX_QUEUE_ERROR;
+//  }
 
   /* Allocate queue for PC Sender*/
   if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
@@ -249,6 +257,9 @@ void MX_ThreadX_Init(void)
 void MainThread_Entry(ULONG thread_input)
 {
   UNUSED(thread_input);
+  while(1){
+	  tx_thread_sleep(10000);
+  }
 }
 
 /**
@@ -259,10 +270,14 @@ void MainThread_Entry(ULONG thread_input)
 void ThreadUART3Sender_Entry(ULONG thread_input){
   UNUSED(thread_input);
   uint8_t *QueueUART3SenderData = malloc(UART3_MAX_MESSAGE_SIZE);
+  uint8_t message_size;
   // Wait until QueueUART3Sender is not empty
   while(1){
     tx_queue_receive(&QueueUART3Sender, &QueueUART3SenderData, TX_WAIT_FOREVER);
-    HAL_UART_Transmit(&huart3, QueueUART3SenderData, strlen(QueueUART3SenderData), 1000);
+    QueueUART3SenderData[3] = 0;
+    message_size = strlen(QueueUART3SenderData);
+    HAL_UART_Transmit(&huart3, &message_size, 1, 1000);
+    HAL_UART_Transmit(&huart3, QueueUART3SenderData, message_size, 10000);
   }
   free (QueueUART3SenderData);
 }
