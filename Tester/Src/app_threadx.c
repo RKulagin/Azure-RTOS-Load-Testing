@@ -50,10 +50,7 @@ TX_THREAD ThreadTwo;
 TX_THREAD ThreadThree;
 TX_EVENT_FLAGS_GROUP EventFlag;
 
-volatile uint8_t RX_data[256];
-volatile uint8_t buffer_1[256];
-volatile uint8_t size_of_rx_data;
-volatile uint8_t uart3_received;
+
 
 /* USER CODE END PV */
 
@@ -233,7 +230,7 @@ void ThreadTwo_Entry(ULONG thread_input)
   * USE UART_3
   * @retval None
   */
-void ThreadOne_Entry(ULONG thread_input)
+void ThreadThree_Entry(ULONG thread_input)
 {
 	ULONG   actual_flags = 0;
 	while(1) {
@@ -278,16 +275,16 @@ void App_Delay(uint32_t Delay)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
  if (huart == &huart1) {
-  if (size_of_rx_data == 0){
-	  size_of_rx_data = RX_data[0];
-	  RX_data[0] = 0;
-	  HAL_UART_Receive_IT(&huart1, (uint8_t*)&RX_data, size_of_rx_data);
+  if (size_of_rx_data_1 == 0){
+	  size_of_rx_data_1 = RX_data_1[0];
+	  RX_data_1[0] = 0;
+	  HAL_UART_Receive_IT(&huart1, (uint8_t*)&RX_data_1, size_of_rx_data_1);
   }
   else {
 	  strcpy(buffer_1, RX_data);
-	  size_of_rx_data = 0;
+	  size_of_rx_data_1 = 0;
 	  memset(RX_data, 0, 256);
-	  HAL_UART_Receive_IT(&huart1, (uint8_t*)&RX_data, 1);
+	  HAL_UART_Receive_IT(&huart1, (uint8_t*)&RX_data_1, 1);
 	  // uart3_received = 1;
 
 	  // устанавливаем флаг
@@ -296,5 +293,48 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	            Error_Handler();
 	          }
   }
+ } else {
+	 if (huart == &huart2) {
+	  if (size_of_rx_data_2 == 0){
+		  size_of_rx_data_2 = RX_data_2[0];
+		  RX_data_2[0] = 0;
+		  HAL_UART_Receive_IT(&huart2, (uint8_t*)&RX_data_2, size_of_rx_data_2);
+	  }
+	  else {
+		  strcpy(buffer_2, RX_data);
+		  size_of_rx_data_2 = 0;
+		  memset(RX_data, 0, 256);
+		  HAL_UART_Receive_IT(&huart2, (uint8_t*)&RX_data_2, 1);
+		  // uart3_received = 1;
+
+		  // устанавливаем флаг
+		  if (tx_event_flags_set(&EventFlag, THREAD_TWO_EVT, TX_OR) != TX_SUCCESS)
+		          {
+		            Error_Handler();
+		          }
+	  }
+	 }
+	 else {
+	 	 if (huart == &huart3) {
+	 	  if (size_of_rx_data_3 == 0){
+	 		  size_of_rx_data_3 = RX_data_3[0];
+	 		  RX_data_3[0] = 0;
+	 		  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data_3, size_of_rx_data_3);
+	 	  }
+	 	  else {
+	 		  strcpy(buffer_3, RX_data);
+	 		  size_of_rx_data_3 = 0;
+	 		  memset(RX_data, 0, 256);
+	 		  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data_3, 1);
+	 		  // uart3_received = 1;
+
+	 		  // устанавливаем флаг
+	 		  if (tx_event_flags_set(&EventFlag, THREAD_THREE_EVT, TX_OR) != TX_SUCCESS)
+	 		          {
+	 		            Error_Handler();
+	 		          }
+	 	  }
+	 	 }
+	  }
  }
 }

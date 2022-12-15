@@ -56,7 +56,17 @@ static void MX_GPIO_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+volatile uint8_t RX_data_1[256];
+volatile uint8_t buffer_1[256];
+volatile uint8_t size_of_rx_data_1;
 
+volatile uint8_t RX_data_2[256];
+volatile uint8_t buffer_2[256];
+volatile uint8_t size_of_rx_data_2;
+
+volatile uint8_t RX_data_3[256];
+volatile uint8_t buffer_3[256];
+volatile uint8_t size_of_rx_data_3;
 /* USER CODE END 0 */
 
 /**
@@ -96,6 +106,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
+
+  /* Ждём принятия данных на наши uarts (названия на рандоме) */
+  HAL_UART_Receive_IT(&huart1, (uint8_t*)&RX_data_1, 1);
+  HAL_UART_Receive_IT(&huart2, (uint8_t*)&RX_data_2, 1);
+  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data_3, 1);
+
 
   MX_ThreadX_Init();
 }
