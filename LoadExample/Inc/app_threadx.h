@@ -60,10 +60,10 @@ void MX_ThreadX_Init(void);
 #define APP_STACK_SIZE                           512
 #define APP_BYTE_POOL_SIZE                       (12 * 1024)
 
-#define THREAD_ONE_PRIO                          10
-#define THREAD_ONE_PREEMPTION_THRESHOLD          THREAD_ONE_PRIO
-#define THREAD_TWO_PRIO                          10
-#define THREAD_TWO_PREEMPTION_THRESHOLD          9
+#define UART3_SENDER_THREAD_PRIO                          10
+#define UART3_SENDER_THREAD_PREEMPTION_THRESHOLD UART3_SENDER_THREAD_PRIO
+#define UART3_RECEIVER_THREAD_PRIO                          10
+#define UART3_RECEIVER_THREAD_PREEMPTION_THRESHOLD          UART3_RECEIVER_THREAD_PRIO
 #define MAIN_THREAD_PRIO                         5
 #define MAIN_THREAD_PREEMPTION_THRESHOLD         MAIN_THREAD_PRIO
 
@@ -72,10 +72,15 @@ void MX_ThreadX_Init(void);
 
 #define THREAD_ONE_EVT                           0x01
 #define THREAD_TWO_EVT                           0x02
+
+
+#define QUEUE_UART3_SENDER_SIZE                  256
+#define QUEUE_UART3_RECEIVER_SIZE                256
+
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */
-
+extern TX_QUEUE QueueUART3Receiver;
 /* USER CODE END 1 */
 
 #ifdef __cplusplus

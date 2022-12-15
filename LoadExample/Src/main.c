@@ -107,8 +107,9 @@ int main(void)
   /* USER CODE END 2 */
   BSP_LED_Toggle(LED_RED);
 
-//  MX_ThreadX_Init();
   HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
+//  HAL_UART_Transmit(&huart3, "2",1, 1000);
+  MX_ThreadX_Init();
 
 
   /* We should never get here as control is now taken by the scheduler */
@@ -117,16 +118,16 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  if (uart3_received == 1){
-		  buffer[size_of_tx_data] = 0;
-		  HAL_UART_Transmit(&huart3, &size_of_tx_data, 1, 100);
-		  HAL_UART_Transmit(&huart3, buffer, size_of_tx_data, 1000);
+	  // if (uart3_received == 1){
+		//   buffer[size_of_tx_data] = 0;
+		//   HAL_UART_Transmit(&huart3, &size_of_tx_data, 1, 100);
+		//   HAL_UART_Transmit(&huart3, buffer, size_of_tx_data, 1000);
 
-		  uart3_received = 0;
-		  memset(buffer, 0, 256);
-		  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
+		//   uart3_received = 0;
+		//   memset(buffer, 0, 256);
+		//   HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
 
-	  }
+	  // }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -140,15 +141,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, size_of_rx_data);
   }
   else {
-	  strcpy(buffer, RX_data);
+    char* data = malloc(size_of_rx_data+1);
+    memcpy(data, RX_data, size_of_rx_data);
+    data[size_of_rx_data] = 0;
+    tx_queue_send(&QueueUART3Receiver, &data, TX_NO_WAIT);
 	  size_of_tx_data = size_of_rx_data;
 	  size_of_rx_data = 0;
 	  memset(RX_data, 0, 256);
-//	  HAL_UART_Receive_IT(&huart6, (uint8_t*)&RX_data, 1);
+	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
 	  uart3_received = 1;
   }
  }
 }
+
+
 
 /**
   * @brief System Clock Configuration

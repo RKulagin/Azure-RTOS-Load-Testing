@@ -114,7 +114,7 @@ int main(void)
   BSP_LED_Toggle(LED_BLUE);
 //  HAL_UART_Transmit(&huart3, "1", 1, 100);
   HAL_UART_Receive_IT(&huart3, (uint8_t*)&UART3_RX_data, 1);
-
+//  HAL_UART_Receive(&huart3, (uint8_t*)&UART3_RX_data,1, 10000000);
   MX_ThreadX_Init();
 
 
@@ -263,8 +263,7 @@ static void MX_USART3_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
-//  size_of_rx_data = 0;
-  // uart3_received = 0;
+ UART3_size_of_rx_data = 0;
   /* USER CODE END USART3_Init 2 */
 
 }
