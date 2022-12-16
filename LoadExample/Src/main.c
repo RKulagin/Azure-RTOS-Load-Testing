@@ -62,6 +62,7 @@ static void MX_USART6_UART_Init(void);
 volatile uint8_t RX_data[256];
 volatile uint8_t buffer[256];
 volatile uint8_t size_of_rx_data;
+volatile uint8_t size_of_tx_data;
 volatile uint8_t uart3_received;
 /* USER CODE END 0 */
 
@@ -104,9 +105,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
   pc_messages_queue = PC_Messages_Queue_Init();
   /* USER CODE END 2 */
+  BSP_LED_Toggle(LED_RED);
 
-//  MX_ThreadX_Init();
   HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
+//  HAL_UART_Transmit(&huart3, "2",1, 1000);
+  MX_ThreadX_Init();
 
 
   /* We should never get here as control is now taken by the scheduler */
@@ -115,16 +118,16 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  if (uart3_received == 1){
-		  const uint8_t message_length = strlen(buffer);
-		  HAL_UART_Transmit(&huart3, &message_length,1, 100);
-		  HAL_UART_Transmit(&huart3, buffer,strlen(buffer), 1000);
+	  // if (uart3_received == 1){
+		//   buffer[size_of_tx_data] = 0;
+		//   HAL_UART_Transmit(&huart3, &size_of_tx_data, 1, 100);
+		//   HAL_UART_Transmit(&huart3, buffer, size_of_tx_data, 1000);
 
-		  uart3_received = 0;
-		  memset(buffer, 0, 256);
-		  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
+		//   uart3_received = 0;
+		//   memset(buffer, 0, 256);
+		//   HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
 
-	  }
+	  // }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -138,7 +141,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, size_of_rx_data);
   }
   else {
-	  strcpy(buffer, RX_data);
+    char* data = malloc(size_of_rx_data+1);
+    memcpy(data, RX_data, size_of_rx_data);
+    data[size_of_rx_data] = 0;
+    tx_queue_send(&QueueUART3Receiver, &data, TX_NO_WAIT);
+	  size_of_tx_data = size_of_rx_data;
 	  size_of_rx_data = 0;
 	  memset(RX_data, 0, 256);
 	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&RX_data, 1);
@@ -146,6 +153,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   }
  }
 }
+
+
 
 /**
   * @brief System Clock Configuration
@@ -246,7 +255,7 @@ static void MX_USART3_UART_Init(void)
   }
   /* USER CODE BEGIN USART3_Init 2 */
   size_of_rx_data = 0;
-  uart3_received = 0;
+   uart3_received = 0;
   /* USER CODE END USART3_Init 2 */
 
 }
@@ -279,7 +288,8 @@ static void MX_USART6_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART6_Init 2 */
-
+//  size_of_rx_data = 0;
+//  uart6_received = 0;
   /* USER CODE END USART6_Init 2 */
 
 }

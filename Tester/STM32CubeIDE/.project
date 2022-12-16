@@ -46,9 +46,9 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Src/main.c</locationURI>
 		</link>
 		<link>
-			<name>Application/User/pc_messages_queue.c</name>
+			<name>Application/User/messages_queue.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Src/pc_messages_queue.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/Src/messages_queue.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/stm32f4xx_hal_msp.c</name>
