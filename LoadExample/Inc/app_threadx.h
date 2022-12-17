@@ -64,6 +64,12 @@ void MX_ThreadX_Init(void);
 #define UART3_SENDER_THREAD_PREEMPTION_THRESHOLD UART3_SENDER_THREAD_PRIO
 #define UART3_RECEIVER_THREAD_PRIO                          10
 #define UART3_RECEIVER_THREAD_PREEMPTION_THRESHOLD          UART3_RECEIVER_THREAD_PRIO
+
+#define UART6_SENDER_THREAD_PRIO                          10
+#define UART6_SENDER_THREAD_PREEMPTION_THRESHOLD UART6_SENDER_THREAD_PRIO
+#define UART6_RECEIVER_THREAD_PRIO                          10
+#define UART6_RECEIVER_THREAD_PREEMPTION_THRESHOLD          UART6_RECEIVER_THREAD_PRIO
+
 #define MAIN_THREAD_PRIO                         5
 #define MAIN_THREAD_PREEMPTION_THRESHOLD         MAIN_THREAD_PRIO
 
@@ -76,11 +82,15 @@ void MX_ThreadX_Init(void);
 
 #define QUEUE_UART3_SENDER_SIZE                  256
 #define QUEUE_UART3_RECEIVER_SIZE                256
+#define QUEUE_UART6_SENDER_SIZE                  256
+#define QUEUE_UART6_RECEIVER_SIZE                256
+
 
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */
 extern TX_QUEUE QueueUART3Receiver;
+extern TX_QUEUE QueueUART6Receiver;
 /* USER CODE END 1 */
 
 #ifdef __cplusplus
