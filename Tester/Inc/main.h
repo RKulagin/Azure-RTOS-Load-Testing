@@ -34,13 +34,14 @@ extern "C" {
 #include "stm32f4xx_nucleo_144.h"
 #include "stm32f429xx.h"
 #include "usb_device.h"
-#include "pc_messages_queue.h"
+#include "messages_queue.h"
 
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+extern UART_HandleTypeDef huart3;
+extern UART_HandleTypeDef huart6;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
