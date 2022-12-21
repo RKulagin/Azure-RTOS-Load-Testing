@@ -335,13 +335,16 @@ void ThreadUART3Sender_Entry(ULONG thread_input){
   UNUSED(thread_input);
   uint8_t *QueueUART3SenderData = malloc(UART3_MAX_MESSAGE_SIZE);
   uint8_t message_size;
+  ULONG actual_flags;
   // Wait until QueueUART3Sender is not empty
+  tx_event_flags_get(&EventFlag, EVENT_FLAG_RUN_UART3, TX_OR_CLEAR, &actual_flags, TX_WAIT_FOREVER);
   while(1){
     tx_queue_receive(&QueueUART3Sender, &QueueUART3SenderData, TX_WAIT_FOREVER);
     QueueUART3SenderData[3] = 0;
     message_size = strlen(QueueUART3SenderData);
     HAL_UART_Transmit(&huart3, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart3, QueueUART3SenderData, message_size, 10000);
+    tx_thread_sleep(10);
   }
   free (QueueUART3SenderData);
 }
@@ -374,14 +377,16 @@ void ThreadUART6Sender_Entry(ULONG thread_input){
   UNUSED(thread_input);
   uint8_t *QueueUART6SenderData;
   uint8_t message_size;
-
+  ULONG actual_flags;
   // Wait until QueueUART6Sender is not empty
+  tx_event_flags_get(&EventFlag, EVENT_FLAG_RUN_UART6, TX_OR_CLEAR, &actual_flags, TX_WAIT_FOREVER);
   while(1){
     tx_queue_receive(&QueueUART6Sender, &QueueUART6SenderData, TX_WAIT_FOREVER);
     QueueUART6SenderData[3] = 0;
     message_size = strlen(QueueUART6SenderData);
     HAL_UART_Transmit(&huart6, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart6, QueueUART6SenderData, message_size, 10000);
+    tx_thread_sleep(10);
   }
 }
 
@@ -431,10 +436,38 @@ void ThreadPCReceiver_Entry(ULONG thread_input){
   // Wait until QueuePCReceiver is not empty
   while(1){
     tx_queue_receive(&QueuePCReceiver, &QueuePCReceiverData, TX_WAIT_FOREVER);
-    tx_queue_send(&QueueUART6Sender, &QueuePCReceiverData, TX_WAIT_FOREVER);
+    if (QueuePCReceiverData[0] == '3' && QueuePCReceiverData[1] == ','){
+        uint8_t *Message = malloc((strlen(QueuePCReceiverData)-1) * sizeof(uint8_t));
+        memcpy(Message, QueuePCReceiverData + 2, strlen(QueuePCReceiverData)-2);
+        Message[strlen(QueuePCReceiverData)-2] = 0;
+        tx_queue_send(&QueueUART3Sender, &Message, TX_WAIT_FOREVER);
+    } else {
+      if (QueuePCReceiverData[0] == '6' && QueuePCReceiverData[1] == ','){
+        uint8_t *Message = malloc((strlen(QueuePCReceiverData)-1) * sizeof(uint8_t));
+        memcpy(Message, QueuePCReceiverData + 2, strlen(QueuePCReceiverData)-2);
+        Message[strlen(QueuePCReceiverData)-2] = 0;
+        tx_queue_send(&QueueUART6Sender, &Message, TX_WAIT_FOREVER);
+    } else {
+        if (strcmp(QueuePCReceiverData, "Hello") == 0){
+          uint8_t *Message = malloc((strlen("Azure RTOS Tester v0.1\n")+1) * sizeof(uint8_t));
+          strcpy(Message, "Azure RTOS Tester v0.1\n");
+          Message[strlen("Azure RTOS Tester v0.1\n")] = 0;
+          tx_queue_send(&QueuePCSender, &Message, TX_WAIT_FOREVER);
+        }
+        else {
+    	  if (strcmp(QueuePCReceiverData, "Run") == 0){
+    		  if (tx_event_flags_set(&EventFlag, 3, TX_OR) != HAL_OK){
+    	          uint8_t *Message = malloc((strlen("Can't start\n")+1) * sizeof(uint8_t));
+    	          strcpy(Message, "Can't start\n");
+    	          Message[strlen("Can't start\n")] = 0;
+    	          tx_queue_send(&QueuePCSender, &Message, TX_WAIT_FOREVER);
+    		  }
+    	  }
+      }
+    }
   }
 }
-
+}
 /**
   * @brief  Function implementing the ThreadTwo thread.
   * @param  thread_input: Not used 

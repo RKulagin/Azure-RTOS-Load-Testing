@@ -69,8 +69,8 @@ void MX_ThreadX_Init(void);
 #define MAIN_THREAD_PRIO                         5
 #define MAIN_THREAD_PREEMPTION_THRESHOLD         MAIN_THREAD_PRIO
 
-#define THREAD_ONE_EVT                           0x01
-#define THREAD_TWO_EVT                           0x02
+#define EVENT_FLAG_RUN_UART3                     0x01
+#define EVENT_FLAG_RUN_UART6                     0x02
 
 #define QUEUE_UART3_SENDER_SIZE                  256
 #define QUEUE_UART3_RECEIVER_SIZE                256
@@ -83,6 +83,8 @@ void MX_ThreadX_Init(void);
 
 #define UART3_MAX_MESSAGE_SIZE                   256
 #define UART6_MAX_MESSAGE_SIZE                   256
+
+
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */

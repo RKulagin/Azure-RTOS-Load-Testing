@@ -416,10 +416,6 @@ __HAL_RCC_GPIOC_CLK_ENABLE();
  * @retval None
 */
 void Queue_Init(void){
-  PC_RX_messages_queue = Messages_Queue_Init();
-  PC_TX_messages_queue = Messages_Queue_Init();
-  UART3_RX_messages_queue = Messages_Queue_Init();
-  UART6_RX_messages_queue = Messages_Queue_Init();
 }
 
 /* USER CODE END 4 */
