@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "app_threadx.h"
+#include <time.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -58,6 +59,18 @@ TX_QUEUE QueueUART6Sender;
 TX_QUEUE QueueUART6Receiver;
 TX_QUEUE QueuePCSender;
 TX_QUEUE QueuePCReceiver;
+
+void MatrixMult(int **A, int **B, int **C, int N){
+
+	// умножаем
+	for(int i = 0; i < N; i++)
+	    for(int j = 0; j < N; j++)
+	    {
+	        C[i][j] = 0;
+	        for(int k = 0; k < N; k++)
+	        C[i][j] += A[i][k] * B[k][j];
+	    }
+}
 
 /* USER CODE END PV */
 
@@ -321,9 +334,60 @@ void MX_ThreadX_Init(void)
 void MainThread_Entry(ULONG thread_input)
 {
   UNUSED(thread_input);
+
+  // выделяем память
+  		int **A = (int**)malloc(N * sizeof(int*));
+  		int **B = (int**)malloc(N * sizeof(int*));
+  		int **C = (int**)malloc(N * sizeof(int*));
+  		for (i = 0; i < N; i++)
+  		{
+  		    A[i] = (int*)malloc(N * sizeof(int));
+  		    B[i] = (int*)malloc(N * sizeof(int));
+  		    C[i] = (int*)malloc(N * sizeof(int));
+  		}
+
+  // заполняем случайными значениями
+  		srand(time(NULL));
+  		for (i = 0; i < N; i++)
+  			for (j = 0; j < N; j++)
+  				  {
+  				     A[i][j] = rand() % 256;
+  				     B[i][j] = rand() % 256;
+  				  }
+
   while(1){
-	  tx_thread_sleep(10000);
+
+	  	int i = 0;
+	  	int N = 5;
+
+
+		for (i = 0; i < 2; i++){
+			// C = A * B
+			MatrixMult(A, B, C, N);
+
+			// C = B * A
+			MatrixMult(B, A, C, N);
+
+			// B = A * A
+			MatrixMult(A, A, B, N);
+
+			// A = C * C
+			MatrixMult(C, C, A, N);
+		}
   }
+
+  // освобождаем память
+  for (i = 0; i < N; i++)
+	{
+		free(A[i]);
+		free(B[i]);
+		free(C[i]);
+	}
+
+  free(A);
+  free(B);
+  free(C);
+
 }
 
 /**
