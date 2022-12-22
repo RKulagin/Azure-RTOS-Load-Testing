@@ -299,6 +299,8 @@ static void MX_UART4_UART_Init(void)
   }
   /* USER CODE BEGIN UART4_Init 2 */
 
+  UART4_size_of_rx_data = 0 ;
+
   /* USER CODE END UART4_Init 2 */
 
 }
@@ -331,6 +333,8 @@ static void MX_UART5_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN UART5_Init 2 */
+
+  UART5_size_of_rx_data = 0 ;
 
   /* USER CODE END UART5_Init 2 */
 

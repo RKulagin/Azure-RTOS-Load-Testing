@@ -133,6 +133,22 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
     ret = TX_THREAD_ERROR;
   }
 
+  /* Allocate the stack for ThreadUART5Receiver.  */
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                       APP_STACK_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    ret = TX_POOL_ERROR;
+  }
+
+  /* Create ThreadUART5Receiver.  */
+  if (tx_thread_create(&ThreadUART5Receiver, "UART5 Receiver Thread", ThreadUART5Receiver_Entry, 0,
+                       pointer, APP_STACK_SIZE,
+                       UART5_RECEIVER_THREAD_PRIO, UART5_RECEIVER_THREAD_PREEMPTION_THRESHOLD,
+                       TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
+  {
+    ret = TX_THREAD_ERROR;
+  }
+
   /* Allocate the stack for ThreadUART5Sender.  */
   if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
                        APP_STACK_SIZE, TX_NO_WAIT) != TX_SUCCESS)
@@ -226,6 +242,20 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* Create queue for UART5 Sender. */
   if (tx_queue_create(&QueueUART5Sender, "UART5 Sender Queue", TX_1_ULONG, pointer,
                       QUEUE_UART5_SENDER_SIZE) != TX_SUCCESS)
+  {
+    ret = TX_QUEUE_ERROR;
+  }
+
+  /* Allocate queue for UART5 Receiver. */
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                      QUEUE_UART5_RECEIVER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    ret = TX_POOL_ERROR;
+  }
+
+  /* Create queue for UART5 Receiver. */
+  if (tx_queue_create(&QueueUART5Receiver, "UART5 Receiver Queue", TX_1_ULONG, pointer,
+                      QUEUE_UART5_RECEIVER_SIZE) != TX_SUCCESS)
   {
     ret = TX_QUEUE_ERROR;
   }
@@ -380,8 +410,8 @@ void ThreadUART5Sender_Entry(ULONG thread_input){
   while (1){
     tx_queue_receive(&QueueUART5Sender, &QueueUART5SenderData, TX_WAIT_FOREVER);
     message_size = strlen(QueueUART5SenderData);
-    HAL_UART_Transmit(&huart4, &message_size, 1, 1000);
-    HAL_UART_Transmit(&huart4, QueueUART5SenderData, message_size, 10000);
+    HAL_UART_Transmit(&huart5, &message_size, 1, 1000);
+    HAL_UART_Transmit(&huart5, QueueUART5SenderData, message_size, 10000);
   }
 }
 

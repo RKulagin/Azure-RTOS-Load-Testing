@@ -568,7 +568,7 @@ void ThreadPCReceiver_Entry(ULONG thread_input){
           Message[strlen("Azure RTOS Tester v0.1\n")] = 0;
           tx_queue_send(&QueuePCSender, &Message, TX_WAIT_FOREVER);
     } else if (strcmp(QueuePCReceiverData, "Run") == 0){
-    		  if (tx_event_flags_set(&EventFlag, 5, TX_OR) != HAL_OK){
+    		  if (tx_event_flags_set(&EventFlag, 7, TX_OR) != HAL_OK){
     	          uint8_t *Message = malloc((strlen("Can't start\n")+1) * sizeof(uint8_t));
     	          strcpy(Message, "Can't start\n");
     	          Message[strlen("Can't start\n")] = 0;
