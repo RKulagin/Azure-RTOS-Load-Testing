@@ -8,6 +8,7 @@ struct Queue* Messages_Queue_Init(){
 	queue->start = 0;
 	queue->end = 0;
 	return queue;
+	
 }
 
 void Push(struct Queue* q, uint8_t* message){

@@ -69,11 +69,14 @@ void MX_ThreadX_Init(void);
 #define MAIN_THREAD_PRIO                         5
 #define MAIN_THREAD_PREEMPTION_THRESHOLD         MAIN_THREAD_PRIO
 
-#define EVENT_FLAG_RUN_UART3                     0x01
-#define EVENT_FLAG_RUN_UART6                     0x02
+#define EVENT_FLAG_RUN_UART4                     0x01
+#define EVENT_FLAG_RUN_UART5                     0x02
+#define EVENT_FLAG_RUN_UART6                     0x04
 
-#define QUEUE_UART3_SENDER_SIZE                  256
-#define QUEUE_UART3_RECEIVER_SIZE                256
+#define QUEUE_UART4_SENDER_SIZE                  256
+#define QUEUE_UART4_RECEIVER_SIZE                256
+#define QUEUE_UART5_SENDER_SIZE                  256
+#define QUEUE_UART5_RECEIVER_SIZE                256
 #define QUEUE_UART6_SENDER_SIZE                  256
 #define QUEUE_UART6_RECEIVER_SIZE                256
 #define QUEUE_PC_SENDER_SIZE                     256
@@ -81,14 +84,16 @@ void MX_ThreadX_Init(void);
 
 
 
-#define UART3_MAX_MESSAGE_SIZE                   256
+#define UART4_MAX_MESSAGE_SIZE                   256
+#define UART5_MAX_MESSAGE_SIZE                   256
 #define UART6_MAX_MESSAGE_SIZE                   256
 
 
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */
-extern TX_QUEUE QueueUART3Receiver;
+extern TX_QUEUE QueueUART4Receiver;
+extern TX_QUEUE QueueUART5Receiver;
 extern TX_QUEUE QueueUART6Receiver;
 extern TX_QUEUE QueuePCReceiver;
 extern TX_QUEUE QueuePCSender;

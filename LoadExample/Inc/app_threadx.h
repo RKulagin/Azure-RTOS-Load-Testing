@@ -60,10 +60,15 @@ void MX_ThreadX_Init(void);
 #define APP_STACK_SIZE                           512
 #define APP_BYTE_POOL_SIZE                       (12 * 1024)
 
-#define UART3_SENDER_THREAD_PRIO                          10
-#define UART3_SENDER_THREAD_PREEMPTION_THRESHOLD UART3_SENDER_THREAD_PRIO
-#define UART3_RECEIVER_THREAD_PRIO                          10
-#define UART3_RECEIVER_THREAD_PREEMPTION_THRESHOLD          UART3_RECEIVER_THREAD_PRIO
+#define UART4_SENDER_THREAD_PRIO                          10
+#define UART4_SENDER_THREAD_PREEMPTION_THRESHOLD UART4_SENDER_THREAD_PRIO
+#define UART4_RECEIVER_THREAD_PRIO                          10
+#define UART4_RECEIVER_THREAD_PREEMPTION_THRESHOLD          UART4_RECEIVER_THREAD_PRIO
+
+#define UART5_SENDER_THREAD_PRIO                          10
+#define UART5_SENDER_THREAD_PREEMPTION_THRESHOLD          UART5_SENDER_THREAD_PRIO
+#define UART5_RECEIVER_THREAD_PRIO                        10
+#define UART5_RECEIVER_THREAD_PREEMPTION_THRESHOLD        UART5_RECEIVER_THREAD_PRIO
 
 #define UART6_SENDER_THREAD_PRIO                          10
 #define UART6_SENDER_THREAD_PREEMPTION_THRESHOLD UART6_SENDER_THREAD_PRIO
@@ -80,8 +85,10 @@ void MX_ThreadX_Init(void);
 #define THREAD_TWO_EVT                           0x02
 
 
-#define QUEUE_UART3_SENDER_SIZE                  256
-#define QUEUE_UART3_RECEIVER_SIZE                256
+#define QUEUE_UART4_SENDER_SIZE                  256
+#define QUEUE_UART4_RECEIVER_SIZE                256
+#define QUEUE_UART5_SENDER_SIZE                  256
+#define QUEUE_UART5_RECEIVER_SIZE                256
 #define QUEUE_UART6_SENDER_SIZE                  256
 #define QUEUE_UART6_RECEIVER_SIZE                256
 
@@ -89,7 +96,8 @@ void MX_ThreadX_Init(void);
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */
-extern TX_QUEUE QueueUART3Receiver;
+extern TX_QUEUE QueueUART4Receiver;
+extern TX_QUEUE QueueUART5Receiver;
 extern TX_QUEUE QueueUART6Receiver;
 /* USER CODE END 1 */
 

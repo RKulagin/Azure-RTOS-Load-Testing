@@ -44,22 +44,28 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 TX_THREAD MainThread;
-TX_THREAD ThreadUART3Sender;
-TX_THREAD ThreadUART3Receiver;
+TX_THREAD ThreadUART4Sender;
+TX_THREAD ThreadUART4Receiver;
+TX_THREAD ThreadUART5Sender;
+TX_THREAD ThreadUART5Receiver;
 TX_THREAD ThreadUART6Sender;
 TX_THREAD ThreadUART6Receiver;
 TX_EVENT_FLAGS_GROUP EventFlag;
 
-TX_QUEUE QueueUART3Sender;
-TX_QUEUE QueueUART3Receiver;
+TX_QUEUE QueueUART4Sender;
+TX_QUEUE QueueUART4Receiver;
+TX_QUEUE QueueUART5Sender;
+TX_QUEUE QueueUART5Receiver;
 TX_QUEUE QueueUART6Sender;
 TX_QUEUE QueueUART6Receiver;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-void ThreadUART3Sender_Entry(ULONG thread_input);
-void ThreadUART3Receiver_Entry(ULONG thread_input);
+void ThreadUART4Sender_Entry(ULONG thread_input);
+void ThreadUART4Receiver_Entry(ULONG thread_input);
+void ThreadUART5Sender_Entry(ULONG thread_input);
+void ThreadUART5Receiver_Entry(ULONG thread_input);
 void ThreadUART6Sender_Entry(ULONG thread_input);
 void ThreadUART6Receiver_Entry(ULONG thread_input);
 void MainThread_Entry(ULONG thread_input);
@@ -95,33 +101,49 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
     ret = TX_THREAD_ERROR;
   }
   
-  /* Allocate the stack for ThreadUART3Sender.  */
+  /* Allocate the stack for ThreadUART4Sender.  */
   if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
                        APP_STACK_SIZE, TX_NO_WAIT) != TX_SUCCESS)
   {
     ret = TX_POOL_ERROR;
   }
   
-  /* Create ThreadUART3Sender.  */
-  if (tx_thread_create(&ThreadUART3Sender, "UART3 Sender Thread", ThreadUART3Sender_Entry, 0,  
+  /* Create ThreadUART4Sender.  */
+  if (tx_thread_create(&ThreadUART4Sender, "UART4 Sender Thread", ThreadUART4Sender_Entry, 0,  
                        pointer, APP_STACK_SIZE, 
-                       UART3_SENDER_THREAD_PRIO, UART3_SENDER_THREAD_PREEMPTION_THRESHOLD,
+                       UART4_SENDER_THREAD_PRIO, UART4_SENDER_THREAD_PREEMPTION_THRESHOLD,
                        TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
   {
     ret = TX_THREAD_ERROR;
   }
 
-  /* Allocate the stack for ThreadUART3Receiver.  */
+  /* Allocate the stack for ThreadUART4Receiver.  */
   if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
                        APP_STACK_SIZE, TX_NO_WAIT) != TX_SUCCESS)
   {
     ret = TX_POOL_ERROR;
   }
-  
-  /* Create ThreadUART3Receiver. */
-  if (tx_thread_create(&ThreadUART3Receiver, "UART3 Receiver Thread", ThreadUART3Receiver_Entry, 0,  
+
+  /* Create ThreadUART4Receiver.  */
+  if (tx_thread_create(&ThreadUART4Receiver, "UART4 Receiver Thread", ThreadUART4Receiver_Entry, 0,  
                        pointer, APP_STACK_SIZE, 
-                       UART3_RECEIVER_THREAD_PRIO, UART3_RECEIVER_THREAD_PREEMPTION_THRESHOLD,
+                       UART4_RECEIVER_THREAD_PRIO, UART4_RECEIVER_THREAD_PREEMPTION_THRESHOLD,
+                       TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
+  {
+    ret = TX_THREAD_ERROR;
+  }
+
+  /* Allocate the stack for ThreadUART5Sender.  */
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                       APP_STACK_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    ret = TX_POOL_ERROR;
+  }
+
+  /* Create ThreadUART5Sender.  */
+  if (tx_thread_create(&ThreadUART5Sender, "UART5 Sender Thread", ThreadUART5Sender_Entry, 0,  
+                       pointer, APP_STACK_SIZE, 
+                       UART5_SENDER_THREAD_PRIO, UART5_SENDER_THREAD_PREEMPTION_THRESHOLD,
                        TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
   {
     ret = TX_THREAD_ERROR;
@@ -166,31 +188,48 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   }
   /* USER CODE END App_ThreadX_Init */
 
-   /* Allocate queue for UART3 Sender*/
-   if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
-                      QUEUE_UART3_SENDER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+   /* Allocate queue for UART4 Sender. */
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                      QUEUE_UART4_SENDER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
   {
     ret = TX_POOL_ERROR;
   }
-  /* Create queue for UART3 Sender*/
-  if (tx_queue_create(&QueueUART3Sender, "UART3 Sender Queue", TX_1_ULONG, pointer,
-                      QUEUE_UART3_SENDER_SIZE) != TX_SUCCESS)
+
+  /* Create queue for UART4 Sender. */
+  if (tx_queue_create(&QueueUART4Sender, "UART4 Sender Queue", TX_1_ULONG, pointer,
+                      QUEUE_UART4_SENDER_SIZE) != TX_SUCCESS)
   {
     ret = TX_QUEUE_ERROR;
   }
 
-  /* Allocate queue for UART3 Receiver. */
+  /* Allocate queue for UART4 Receiver. */
   if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
-                      QUEUE_UART3_RECEIVER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+                      QUEUE_UART4_RECEIVER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
   {
     ret = TX_POOL_ERROR;
   }
-  /* Create queue for UART3 Receiver. */
-  if (tx_queue_create(&QueueUART3Receiver, "UART3 Receiver Queue", TX_1_ULONG, pointer,
-                      QUEUE_UART3_RECEIVER_SIZE) != TX_SUCCESS)
+
+  /* Create queue for UART4 Receiver. */
+  if (tx_queue_create(&QueueUART4Receiver, "UART4 Receiver Queue", TX_1_ULONG, pointer,
+                      QUEUE_UART4_RECEIVER_SIZE) != TX_SUCCESS)
   {
     ret = TX_QUEUE_ERROR;
   }
+
+  /* Allocate queue for UART5 Sender. */
+  if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
+                      QUEUE_UART5_SENDER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+  {
+    ret = TX_POOL_ERROR;
+  }
+
+  /* Create queue for UART5 Sender. */
+  if (tx_queue_create(&QueueUART5Sender, "UART5 Sender Queue", TX_1_ULONG, pointer,
+                      QUEUE_UART5_SENDER_SIZE) != TX_SUCCESS)
+  {
+    ret = TX_QUEUE_ERROR;
+  }
+
    /* Allocate queue for UART6 Sender*/
    if (tx_byte_allocate(byte_pool, (VOID **) &pointer,
                       QUEUE_UART6_SENDER_SIZE, TX_NO_WAIT) != TX_SUCCESS)
@@ -255,18 +294,18 @@ void MainThread_Entry(ULONG thread_input)
 }
 
 /**
-  * @brief  Function implementing the ThreadUART3Receiver_Entry thread.
+  * @brief  Function implementing the ThreadUART4Receiver_Entry thread.
   * @param  thread_input: Not used 
   * @retval None
   */
-void ThreadUART3Receiver_Entry(ULONG thread_input){
+void ThreadUART4Receiver_Entry(ULONG thread_input){
   UNUSED(thread_input);
-  uint8_t* QueueUART3ReceiverData;
+  uint8_t* QueueUART4ReceiverData;
   /* Infinite loop */
   while (1){
-    tx_queue_receive(&QueueUART3Receiver, &QueueUART3ReceiverData, TX_WAIT_FOREVER);
+    tx_queue_receive(&QueueUART4Receiver, &QueueUART4ReceiverData, TX_WAIT_FOREVER);
     // Place for some logic
-    UINT value = atoi(QueueUART3ReceiverData);
+    UINT value = atoi(QueueUART4ReceiverData);
     UINT res = value*value;
 
     // Delay = 100ms
@@ -278,28 +317,74 @@ void ThreadUART3Receiver_Entry(ULONG thread_input){
     message[strlen(message)] = '\n';
 //    const uint8_t message_length = strlen(message);
 
-
-    tx_queue_send(&QueueUART3Sender, &message, TX_WAIT_FOREVER);
+    tx_queue_send(&QueueUART4Sender, &message, TX_WAIT_FOREVER);
   }
 }
 
 /**
-  * @brief  Function implementing the ThreadUART3Sender_Entry thread.
+  * @brief  Function implementing the ThreadUART4Sender_Entry thread.
   * @param  thread_input: Not used
   * @retval None
   */
-void ThreadUART3Sender_Entry(ULONG thread_input){
+void ThreadUART4Sender_Entry(ULONG thread_input){
   UNUSED(thread_input);
-  uint8_t* QueueUART3SenderData;
+  uint8_t* QueueUART4SenderData;
   uint8_t message_size;
   /* Infinite loop */
   while (1){
-    tx_queue_receive(&QueueUART3Sender, &QueueUART3SenderData, TX_WAIT_FOREVER);
-    message_size = strlen(QueueUART3SenderData);
-    HAL_UART_Transmit(&huart3, &message_size, 1, 1000);
-    HAL_UART_Transmit(&huart3, QueueUART3SenderData, message_size, 10000);
+    tx_queue_receive(&QueueUART4Sender, &QueueUART4SenderData, TX_WAIT_FOREVER);
+    message_size = strlen(QueueUART4SenderData);
+    HAL_UART_Transmit(&huart4, &message_size, 1, 1000);
+    HAL_UART_Transmit(&huart4, QueueUART4SenderData, message_size, 10000);
   }
 }
+
+/**
+  * @brief  Function implementing the ThreadUART5Receiver_Entry thread.
+  * @param  thread_input: Not used 
+  * @retval None
+  */
+void ThreadUART5Receiver_Entry(ULONG thread_input){
+  UNUSED(thread_input);
+  uint8_t* QueueUART5ReceiverData;
+  /* Infinite loop */
+  while (1){
+    tx_queue_receive(&QueueUART5Receiver, &QueueUART5ReceiverData, TX_WAIT_FOREVER);
+    // Place for some logic
+    UINT value = atoi(QueueUART5ReceiverData);
+    UINT res = value*value;
+
+    // Delay = 100ms
+//    App_Delay(10);
+    tx_thread_sleep(10);
+    char* message = malloc(256);
+    memset(message, 0, 256);
+    itoa(res, message, 10);
+    message[strlen(message)] = '\n';
+//    const uint8_t message_length = strlen(message);
+
+    tx_queue_send(&QueueUART5Sender, &message, TX_WAIT_FOREVER);
+  }
+}
+
+/**
+  * @brief  Function implementing the ThreadUART5Sender_Entry thread.
+  * @param  thread_input: Not used
+  * @retval None
+  */
+void ThreadUART5Sender_Entry(ULONG thread_input){
+  UNUSED(thread_input);
+  uint8_t* QueueUART5SenderData;
+  uint8_t message_size;
+  /* Infinite loop */
+  while (1){
+    tx_queue_receive(&QueueUART5Sender, &QueueUART5SenderData, TX_WAIT_FOREVER);
+    message_size = strlen(QueueUART5SenderData);
+    HAL_UART_Transmit(&huart4, &message_size, 1, 1000);
+    HAL_UART_Transmit(&huart4, QueueUART5SenderData, message_size, 10000);
+  }
+}
+
 
 
 /**
