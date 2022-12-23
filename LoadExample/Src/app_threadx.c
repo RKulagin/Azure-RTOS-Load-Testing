@@ -20,6 +20,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "app_threadx.h"
+#include "time.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -70,6 +72,71 @@ void ThreadUART6Sender_Entry(ULONG thread_input);
 void ThreadUART6Receiver_Entry(ULONG thread_input);
 void MainThread_Entry(ULONG thread_input);
 void App_Delay(uint32_t Delay);
+
+// C[N,N] = A[N,N] * B[N,N]
+void MatrixMult(UINT **A, UINT **B, UINT **C, UINT N){
+
+	// умножаем
+	for(UINT i = 0; i < N; i++)
+	    for(UINT j = 0; j < N; j++)
+	    {
+	        C[i][j] = 0;
+	        for(UINT k = 0; k < N; k++)
+	        	C[i][j] += A[i][k] * B[k][j];
+	    }
+}
+
+void getMatrixWithoutRowAndCol(UINT **matrix, UINT size, UINT row, UINT col, UINT **newMatrix) {
+	UINT offsetRow = 0;
+	UINT offsetCol = 0;
+    for(UINT i = 0; i < size-1; i++) {
+        if(i == row) {
+            offsetRow = 1;
+        }
+
+        offsetCol = 0;
+        for(UINTj = 0; j < size-1; j++) {
+
+            if(j == col) {
+                offsetCol = 1;
+            }
+
+            newMatrix[i][j] = matrix[i + offsetRow][j + offsetCol];
+        }
+    }
+}
+
+UINT matrixDet(UINT **matrix, UINT size) {
+	UINT det = 0;
+	UINT degree = 1;
+
+    if(size == 1) {
+        return matrix[0][0];
+    } else if(size == 2) {
+        return matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0];
+    }
+    else {
+    	UINT **newMatrix = (UINT**)malloc(N * sizeof(UINT*));
+    	for (i = 0; i < size; i++) {
+    		newMatrix[i] = (UINT*)malloc(N * sizeof(UINT));
+    	}
+
+        for(UINT j = 0; j < size; j++) {
+            getMatrixWithoutRowAndCol(matrix, size, 0, j, newMatrix);
+            det = det + (degree * matrix[0][j] * matrixDet(newMatrix, size-1));
+            degree = -degree;
+        }
+
+        for(UINT i = 0; i < size-1; i++) {
+        	free(newMatrix[i]);
+        }
+
+        free(newMatrix);
+    }
+
+    return det;
+}
+
 /* USER CODE END PFP */
 
 /**
@@ -317,10 +384,67 @@ void MX_ThreadX_Init(void)
 void MainThread_Entry(ULONG thread_input)
 {
   UNUSED(thread_input);
-  /* Infinite loop */
-  while (1){
-    tx_thread_sleep(10000);
+
+  // выделяем память
+  UINT **A = (UINT**)malloc(N * sizeof(UINT*));
+  UINT **B = (UINT**)malloc(N * sizeof(UINT*));
+  UINT **C = (UINT**)malloc(N * sizeof(UINT*));
+  for (i = 0; i < N; i++)
+  {
+	  A[i] = (UINT*)malloc(N * sizeof(UINT));
+	  B[i] = (UINT*)malloc(N * sizeof(UINT));
+	  C[i] = (UINT*)malloc(N * sizeof(UINT));
   }
+
+  // заполняем случайными значениями
+  srand(time(NULL));
+  for (UINT i = 0; i < N; i++)
+	  for (UINT j = 0; j < N; j++) {
+		  A[i][j] = rand() % 256;
+		  B[i][j] = rand() % 256;
+      }
+
+
+  while(1) {
+
+	  int N = 5;
+
+	  for (UINT ind = 0; ind < 2; ind++){
+		  // C = A * B
+		  MatrixMult(A, B, C, N);
+
+		  // C = B * A
+		  MatrixMult(B, A, C, N);
+
+		  // B = A * A
+		  MatrixMult(A, A, B, N);
+
+		  // A = C * C
+		  MatrixMult(C, C, A, N);
+	  }
+
+	  UINT det = matrixDet(C, N);
+
+	  char* message = malloc(256);
+	  memset(message, 0, 256);
+	  itoa(det, message, 10);
+	  message[strlen(message)] = '\n';
+
+	  tx_queue_send(&QueueUART5Sender, &message, TX_WAIT_FOREVER);
+
+   }
+
+  // освобождаем память
+  for (UINT i = 0; i < N; i++)
+  {
+    	free(A[i]);
+    	free(B[i]);
+    	free(C[i]);
+  }
+
+  free(A);
+  free(B);
+  free(C);
 }
 
 /**
@@ -385,7 +509,7 @@ void ThreadUART5Receiver_Entry(ULONG thread_input){
     UINT res = value*value;
 
     // Delay = 100ms
-//    App_Delay(10);
+    // App_Delay(10);
     tx_thread_sleep(10);
     char* message = malloc(256);
     memset(message, 0, 256);

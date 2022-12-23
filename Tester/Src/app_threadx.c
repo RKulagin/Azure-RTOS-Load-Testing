@@ -77,6 +77,7 @@ void ThreadUART6Receiver_Entry(ULONG thread_input);
 void ThreadPCSender_Entry(ULONG thread_input);
 void ThreadPCReceiver_Entry(ULONG thread_input);
 void App_Delay(uint32_t Delay);
+
 /* USER CODE END PFP */
 
 /**
@@ -389,8 +390,10 @@ void MX_ThreadX_Init(void)
 void MainThread_Entry(ULONG thread_input)
 {
   UNUSED(thread_input);
-  while(1){
-	  tx_thread_sleep(10000);
+
+  /* Infinite loop */
+  while (1){
+    tx_thread_sleep(10000);
   }
 }
 
