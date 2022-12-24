@@ -84,9 +84,9 @@ void MX_ThreadX_Init(void);
 #define UART6_RECEIVER_THREAD_PRIO                          5
 #define UART6_RECEIVER_THREAD_PREEMPTION_THRESHOLD          UART6_RECEIVER_THREAD_PRIO
 
-#define PC_SENDER_THREAD_PRIO                          	2
+#define PC_SENDER_THREAD_PRIO                          	16
 #define PC_SENDER_THREAD_PREEMPTION_THRESHOLD 			PC_SENDER_THREAD_PRIO
-#define PC_RECEIVER_THREAD_PRIO                          5
+#define PC_RECEIVER_THREAD_PRIO                          17
 #define PC_RECEIVER_THREAD_PREEMPTION_THRESHOLD          PC_RECEIVER_THREAD_PRIO
 
 #define MAIN_THREAD_PRIO                         			25
