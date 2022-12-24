@@ -129,6 +129,7 @@ extern TX_QUEUE QueueUART5TimeStart;
 extern TX_QUEUE QueueUART5TimeFinish;
 extern TX_QUEUE QueueUART6TimeStart;
 extern TX_QUEUE QueueUART6TimeFinish;
+extern TX_TIMER my_timer;
 
 /* USER CODE END 1 */
 

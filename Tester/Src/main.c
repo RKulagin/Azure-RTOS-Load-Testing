@@ -167,7 +167,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	  memcpy(data, UART4_RX_data, UART4_size_of_rx_data);
 	  data[UART4_size_of_rx_data] = 0;
 	  tx_queue_send(&QueueUART4Receiver, &data, TX_NO_WAIT);
-	  tx_queue_send(&QueueUART4TimeFinish, tx_time_get(), TX_NO_WAIT);
+
+
+	  ULONG reschedule_ticks;
+	  tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+	  tx_queue_send(&QueueUART4TimeFinish, &reschedule_ticks, TX_NO_WAIT);
+
 	  UART4_size_of_rx_data = 0;
 	  memset(UART4_RX_data, 0, 256);
 	  HAL_UART_Receive_IT(&huart4, (uint8_t*)&UART4_RX_data, 1);

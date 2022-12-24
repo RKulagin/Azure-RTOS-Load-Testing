@@ -70,6 +70,9 @@ TX_QUEUE QueueUART5TimeFinish;
 TX_QUEUE QueueUART6TimeStart;
 TX_QUEUE QueueUART6TimeFinish;
 
+TX_TIMER my_timer;
+ULONG timers_count = 0;
+
 
 /* USER CODE END PV */
 
@@ -85,6 +88,7 @@ void ThreadUART6Receiver_Entry(ULONG thread_input);
 void ThreadPCSender_Entry(ULONG thread_input);
 void ThreadPCReceiver_Entry(ULONG thread_input);
 void App_Delay(uint32_t Delay);
+void my_timer_function(ULONG timer_input);
 
 /* USER CODE END PFP */
 
@@ -249,7 +253,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 
   // THREADS END
 
-  // EVENT FLAGS AND QUEUE BEGIN
+  // EVENT FLAGS, QUEUE, TIMER BEGIN
 
 		  /* Create the event flags group.  */
 		  if (tx_event_flags_create(&EventFlag, "Event Flag") != TX_SUCCESS)
@@ -368,7 +372,13 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 			ret = TX_QUEUE_ERROR;
 		  }
 
-  // EVENT FLAGS AND QUEUE END
+		  /* Create queue for PC Receiver*/
+		  if (tx_timer_create(&my_timer, "my_timer_name", my_timer_function, 0, 0xFFFFFFFF, 0xFFFFFFFF, TX_AUTO_ACTIVATE) != TX_SUCCESS)
+		  {
+			  ret = TX_TIMER_ERROR;
+		  }
+
+  // EVENT FLAGS, QUEUE, TIMER END
   
   // TIME QUEUE BEGIN
 
@@ -518,7 +528,9 @@ void ThreadUART4Sender_Entry(ULONG thread_input){
     QueueUART4SenderData[3] = 0;
     message_size = strlen(QueueUART4SenderData);
 
-    tx_queue_send(&QueueUART4TimeStart, tx_time_get(), TX_WAIT_FOREVER);
+    ULONG reschedule_ticks;
+    tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+    tx_queue_send(&QueueUART4TimeStart, &reschedule_ticks, TX_WAIT_FOREVER);
 
     HAL_UART_Transmit(&huart4, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart4, QueueUART4SenderData, message_size, 10000);
@@ -747,6 +759,17 @@ void ThreadPCReceiver_Entry(ULONG thread_input){
     		  }
     	  }
       }
+}
+
+/**
+  * @brief  Function implementing the my timer.
+  * @param  timer_input: Not used
+  * @retval None
+  */
+void my_timer_function(ULONG timer_input){
+	UNUSED(timer_input);
+
+	timers_count += 1;
 }
 
 /**
