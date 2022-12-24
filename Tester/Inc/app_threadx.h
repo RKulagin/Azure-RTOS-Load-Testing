@@ -69,27 +69,67 @@ void MX_ThreadX_Init(void);
 #define MAIN_THREAD_PRIO                         5
 #define MAIN_THREAD_PREEMPTION_THRESHOLD         MAIN_THREAD_PRIO
 
-#define THREAD_ONE_EVT                           0x01
-#define THREAD_TWO_EVT                           0x02
+#define UART4_SENDER_THREAD_PRIO                          	7
+#define UART4_SENDER_THREAD_PREEMPTION_THRESHOLD 			UART4_SENDER_THREAD_PRIO
+#define UART4_RECEIVER_THREAD_PRIO                          10
+#define UART4_RECEIVER_THREAD_PREEMPTION_THRESHOLD          UART4_RECEIVER_THREAD_PRIO
 
-#define QUEUE_UART3_SENDER_SIZE                  256
-#define QUEUE_UART3_RECEIVER_SIZE                256
+#define UART5_SENDER_THREAD_PRIO                          	13
+#define UART5_SENDER_THREAD_PREEMPTION_THRESHOLD          	UART5_SENDER_THREAD_PRIO
+#define UART5_RECEIVER_THREAD_PRIO                        	15
+#define UART5_RECEIVER_THREAD_PREEMPTION_THRESHOLD        	UART5_RECEIVER_THREAD_PRIO
+
+#define UART6_SENDER_THREAD_PRIO                          	2
+#define UART6_SENDER_THREAD_PREEMPTION_THRESHOLD 			UART6_SENDER_THREAD_PRIO
+#define UART6_RECEIVER_THREAD_PRIO                          5
+#define UART6_RECEIVER_THREAD_PREEMPTION_THRESHOLD          UART6_RECEIVER_THREAD_PRIO
+
+#define PC_SENDER_THREAD_PRIO                          	16
+#define PC_SENDER_THREAD_PREEMPTION_THRESHOLD 			PC_SENDER_THREAD_PRIO
+#define PC_RECEIVER_THREAD_PRIO                          17
+#define PC_RECEIVER_THREAD_PREEMPTION_THRESHOLD          PC_RECEIVER_THREAD_PRIO
+
+#define MAIN_THREAD_PRIO                         			25
+#define MAIN_THREAD_PREEMPTION_THRESHOLD         			MAIN_THREAD_PRIO
+
+
+
+#define EVENT_FLAG_RUN_UART4                     0x01
+#define EVENT_FLAG_RUN_UART5                     0x02
+#define EVENT_FLAG_RUN_UART6                     0x04
+
+#define QUEUE_UART4_SENDER_SIZE                  256
+#define QUEUE_UART4_RECEIVER_SIZE                256
+#define QUEUE_UART5_SENDER_SIZE                  256
+#define QUEUE_UART5_RECEIVER_SIZE                256
 #define QUEUE_UART6_SENDER_SIZE                  256
 #define QUEUE_UART6_RECEIVER_SIZE                256
 #define QUEUE_PC_SENDER_SIZE                     256
 #define QUEUE_PC_RECEIVER_SIZE                   256
 
 
-
-#define UART3_MAX_MESSAGE_SIZE                   256
+#define UART4_MAX_MESSAGE_SIZE                   256
+#define UART5_MAX_MESSAGE_SIZE                   256
 #define UART6_MAX_MESSAGE_SIZE                   256
+
+
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */
-extern TX_QUEUE QueueUART3Receiver;
+extern TX_QUEUE QueueUART4Receiver;
+extern TX_QUEUE QueueUART5Receiver;
 extern TX_QUEUE QueueUART6Receiver;
 extern TX_QUEUE QueuePCReceiver;
 extern TX_QUEUE QueuePCSender;
+
+extern TX_QUEUE QueueUART4TimeStart;
+extern TX_QUEUE QueueUART4TimeFinish;
+extern TX_QUEUE QueueUART5TimeStart;
+extern TX_QUEUE QueueUART5TimeFinish;
+extern TX_QUEUE QueueUART6TimeStart;
+extern TX_QUEUE QueueUART6TimeFinish;
+extern TX_TIMER my_timer;
+extern ULONG timers_count;
 
 /* USER CODE END 1 */
 

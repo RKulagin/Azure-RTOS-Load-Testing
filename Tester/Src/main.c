@@ -43,7 +43,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-UART_HandleTypeDef huart3;
+UART_HandleTypeDef huart4;
+UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart6;
 /* USER CODE END PV */
 
@@ -51,7 +52,8 @@ UART_HandleTypeDef huart6;
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART3_UART_Init(void);
+static void MX_UART4_UART_Init(void);
+static void MX_UART5_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 void Queue_Init(void);
 /* USER CODE BEGIN PFP */
@@ -60,8 +62,11 @@ void Queue_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint8_t UART3_RX_data[256];
-volatile uint8_t UART3_size_of_rx_data;
+volatile uint8_t UART4_RX_data[256];
+volatile uint8_t UART4_size_of_rx_data;
+
+volatile uint8_t UART5_RX_data[256];
+volatile uint8_t UART5_size_of_rx_data;
 
 volatile uint8_t UART6_RX_data[256];
 volatile uint8_t UART6_size_of_rx_data;
@@ -101,13 +106,15 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
-  MX_USART3_UART_Init();
+  MX_UART4_UART_Init();
+  MX_UART5_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
   BSP_LED_Toggle(LED_BLUE);
 //  HAL_UART_Transmit(&huart3, "1", 1, 100);
-  HAL_UART_Receive_IT(&huart3, (uint8_t*)&UART3_RX_data, 1);
+  HAL_UART_Receive_IT(&huart4, (uint8_t*)&UART4_RX_data, 1);
+  HAL_UART_Receive_IT(&huart5, (uint8_t*)&UART5_RX_data, 1);
   HAL_UART_Receive_IT(&huart6, (uint8_t*)&UART6_RX_data, 1);
 //  HAL_UART_Receive(&huart3, (uint8_t*)&UART3_RX_data,1, 10000000);
   MX_ThreadX_Init();
@@ -140,34 +147,78 @@ int main(void)
   /* USER CODE END 3 */
 }
 
+uint8_t max(uint8_t a, uint8_t b){
+	if (a > b){
+		return a;
+	}
+	return b;
+}
+
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
- if (huart == &huart3) {
-  if (UART3_size_of_rx_data == 0){
-    UART3_size_of_rx_data = UART3_RX_data[0];
-	  UART3_RX_data[0] = 0;
-	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&UART3_RX_data, UART3_size_of_rx_data);
+ if (huart == &huart4) {
+	 if (UART4_size_of_rx_data == 0){
+		 UART4_size_of_rx_data = UART4_RX_data[0];
+		  UART4_RX_data[0] = 0;
+		  HAL_UART_Receive_IT(&huart4, (uint8_t*)&UART4_RX_data, max(UART4_size_of_rx_data, 1));
+	  }
+  else {
+	  char* data = malloc(UART4_size_of_rx_data+1);
+	  memcpy(data, UART4_RX_data, UART4_size_of_rx_data);
+	  data[UART4_size_of_rx_data] = 0;
+	  tx_queue_send(&QueueUART4Receiver, &data, TX_NO_WAIT);
+
+	  ULONG reschedule_ticks;
+	  tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+	  tx_queue_send(&QueueUART4TimeFinish, &reschedule_ticks, TX_NO_WAIT);
+	  tx_queue_send(&QueueUART4TimeFinish, &timers_count, TX_NO_WAIT);
+
+	  UART4_size_of_rx_data = 0;
+	  memset(UART4_RX_data, 0, 256);
+	  HAL_UART_Receive_IT(&huart4, (uint8_t*)&UART4_RX_data, 1);
+  }
+ }
+ else if (huart == &huart5) {
+  if (UART5_size_of_rx_data == 0){
+	  UART5_size_of_rx_data = UART5_RX_data[0];
+	  UART5_RX_data[0] = 0;
+	  HAL_UART_Receive_IT(&huart5, (uint8_t*)&UART5_RX_data, max(UART5_size_of_rx_data, 1));
   }
   else {
-    char* data = malloc(UART3_size_of_rx_data+1);
-	  memcpy(data, UART3_RX_data, UART3_size_of_rx_data);
-    data[UART3_size_of_rx_data] = 0;
-	  tx_queue_send(&QueueUART3Receiver, &data, TX_NO_WAIT);
-	  UART3_size_of_rx_data = 0;
-	  memset(UART3_RX_data, 0, 256);
-	  HAL_UART_Receive_IT(&huart3, (uint8_t*)&UART3_RX_data, 1);
+    char* data = malloc(UART5_size_of_rx_data+1);
+	  memcpy(data, UART5_RX_data, UART5_size_of_rx_data);
+	  data[UART5_size_of_rx_data] = 0;
+	  tx_queue_send(&QueueUART5Receiver, &data, TX_NO_WAIT);
+
+	  ULONG reschedule_ticks;
+	  tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+	  tx_queue_send(&QueueUART5TimeFinish, &reschedule_ticks, TX_NO_WAIT);
+	  tx_queue_send(&QueueUART5TimeFinish, &timers_count, TX_NO_WAIT);
+
+
+	  UART5_size_of_rx_data = 0;
+	  memset(UART5_RX_data, 0, 256);
+	  HAL_UART_Receive_IT(&huart5, (uint8_t*)&UART5_RX_data, 1);
   }
  }
  else if (huart == &huart6) {
   if (UART6_size_of_rx_data == 0){
     UART6_size_of_rx_data = UART6_RX_data[0];
     UART6_RX_data[0] = 0;
-    HAL_UART_Receive_IT(&huart6, (uint8_t*)&UART6_RX_data, UART6_size_of_rx_data);
+    HAL_UART_Receive_IT(&huart6, (uint8_t*)&UART6_RX_data, max(UART6_size_of_rx_data, 1));
   }
   else {
     char* data = malloc(UART6_size_of_rx_data+1);
     memcpy(data, UART6_RX_data, UART6_size_of_rx_data);
     data[UART6_size_of_rx_data] = 0;
     tx_queue_send(&QueueUART6Receiver, &data, TX_NO_WAIT);
+
+    ULONG reschedule_ticks;
+    tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+    tx_queue_send(&QueueUART6TimeFinish, &reschedule_ticks, TX_NO_WAIT);
+    tx_queue_send(&QueueUART6TimeFinish, &timers_count, TX_NO_WAIT);
+
+
     UART6_size_of_rx_data = 0;
     memset(UART6_RX_data, 0, 256);
     HAL_UART_Receive_IT(&huart6, (uint8_t*)&UART6_RX_data, 1);
@@ -248,37 +299,76 @@ void PeriphCommonClock_Config(void)
 }
 
 /**
-  * @brief USART3 Initialization Function
+  * @brief UART4 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART3_UART_Init(void)
+static void MX_UART4_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART3_Init 0 */
+  /* USER CODE BEGIN UART4_Init 0 */
 
-  /* USER CODE END USART3_Init 0 */
+  /* USER CODE END UART4_Init 0 */
 
-  /* USER CODE BEGIN USART3_Init 1 */
+  /* USER CODE BEGIN UART4_Init 1 */
 
-  /* USER CODE END USART3_Init 1 */
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 115200;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART3_Init 2 */
- UART3_size_of_rx_data = 0;
-  /* USER CODE END USART3_Init 2 */
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  UART4_size_of_rx_data = 0 ;
+
+  /* USER CODE END UART4_Init 2 */
 
 }
+
+/**
+  * @brief UART5 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART5_UART_Init(void)
+{
+
+  /* USER CODE BEGIN UART5_Init 0 */
+
+  /* USER CODE END UART5_Init 0 */
+
+  /* USER CODE BEGIN UART5_Init 1 */
+
+  /* USER CODE END UART5_Init 1 */
+  huart5.Instance = UART5;
+  huart5.Init.BaudRate = 115200;
+  huart5.Init.WordLength = UART_WORDLENGTH_8B;
+  huart5.Init.StopBits = UART_STOPBITS_1;
+  huart5.Init.Parity = UART_PARITY_NONE;
+  huart5.Init.Mode = UART_MODE_TX_RX;
+  huart5.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart5.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART5_Init 2 */
+
+  UART5_size_of_rx_data = 0 ;
+
+  /* USER CODE END UART5_Init 2 */
+
+}
+
+
 
 /**
   * @brief USART6 Initialization Function
@@ -416,10 +506,6 @@ __HAL_RCC_GPIOC_CLK_ENABLE();
  * @retval None
 */
 void Queue_Init(void){
-  PC_RX_messages_queue = Messages_Queue_Init();
-  PC_TX_messages_queue = Messages_Queue_Init();
-  UART3_RX_messages_queue = Messages_Queue_Init();
-  UART6_RX_messages_queue = Messages_Queue_Init();
 }
 
 /* USER CODE END 4 */
