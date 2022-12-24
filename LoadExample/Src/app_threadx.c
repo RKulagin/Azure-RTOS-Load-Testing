@@ -117,7 +117,7 @@ UINT matrixDet(UINT **matrix, UINT size) {
     }
     else {
     	UINT **newMatrix = (UINT**)malloc(N * sizeof(UINT*));
-    	for (i = 0; i < size; i++) {
+    	for (UINT i = 0; i < size; i++) {
     		newMatrix[i] = (UINT*)malloc(N * sizeof(UINT));
     	}
 
