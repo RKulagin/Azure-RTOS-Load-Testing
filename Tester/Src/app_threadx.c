@@ -543,7 +543,6 @@ void ThreadUART4Sender_Entry(ULONG thread_input){
 
     HAL_UART_Transmit(&huart4, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart4, QueueUART4SenderData, message_size, 10000);
-    tx_thread_sleep(10);
   }
   free (QueueUART4SenderData);
 }
@@ -621,7 +620,6 @@ void ThreadUART5Sender_Entry(ULONG thread_input){
 
     HAL_UART_Transmit(&huart5, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart5, QueueUART5SenderData, message_size, 10000);
-    tx_thread_sleep(10);
   }
   free (QueueUART5SenderData);
 }
@@ -701,7 +699,6 @@ void ThreadUART6Sender_Entry(ULONG thread_input){
 
     HAL_UART_Transmit(&huart6, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart6, QueueUART6SenderData, message_size, 10000);
-    tx_thread_sleep(10);
   }
 }
 
