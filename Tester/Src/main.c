@@ -147,13 +147,21 @@ int main(void)
   /* USER CODE END 3 */
 }
 
+uint8_t max(uint8_t a, uint8_t b){
+	if (a > b){
+		return a;
+	}
+	return b;
+}
+
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
  if (huart == &huart4) {
 	 if (UART4_size_of_rx_data == 0){
 		 tx_queue_send(&QueueUART4TimeFinish, tx_time_get(), TX_WAIT_FOREVER);
 		UART4_size_of_rx_data = UART4_RX_data[0];
 		  UART4_RX_data[0] = 0;
-		  HAL_UART_Receive_IT(&huart4, (uint8_t*)&UART4_RX_data, UART4_size_of_rx_data);
+		  HAL_UART_Receive_IT(&huart4, (uint8_t*)&UART4_RX_data, max(UART4_size_of_rx_data, 1));
 	  }
   else {
     char* data = malloc(UART4_size_of_rx_data+1);
@@ -170,7 +178,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	  tx_queue_send(&QueueUART5TimeFinish, tx_time_get(), TX_WAIT_FOREVER);
     UART5_size_of_rx_data = UART5_RX_data[0];
 	  UART5_RX_data[0] = 0;
-	  HAL_UART_Receive_IT(&huart5, (uint8_t*)&UART5_RX_data, UART5_size_of_rx_data);
+	  HAL_UART_Receive_IT(&huart5, (uint8_t*)&UART5_RX_data, max(UART5_size_of_rx_data, 1));
   }
   else {
     char* data = malloc(UART5_size_of_rx_data+1);
@@ -187,7 +195,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	  tx_queue_send(&QueueUART6TimeFinish, tx_time_get(), TX_WAIT_FOREVER);
     UART6_size_of_rx_data = UART6_RX_data[0];
     UART6_RX_data[0] = 0;
-    HAL_UART_Receive_IT(&huart6, (uint8_t*)&UART6_RX_data, UART6_size_of_rx_data);
+    HAL_UART_Receive_IT(&huart6, (uint8_t*)&UART6_RX_data, max(UART6_size_of_rx_data, 1));
   }
   else {
     char* data = malloc(UART6_size_of_rx_data+1);

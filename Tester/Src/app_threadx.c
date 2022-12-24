@@ -129,7 +129,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 		  /* Create ThreadUART4Sender.  */
 		  if (tx_thread_create(&ThreadUART4Sender, "Thread UART4 Sender", ThreadUART4Sender_Entry, 0,
 							   pointer, APP_STACK_SIZE,
-							   THREAD_ONE_PRIO, THREAD_ONE_PREEMPTION_THRESHOLD,
+							   UART4_SENDER_THREAD_PRIO, UART4_SENDER_THREAD_PREEMPTION_THRESHOLD,
 							   TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
 		  {
 			ret = TX_THREAD_ERROR;
@@ -145,7 +145,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 		  /* Create ThreadUART4Receiver.  */
 		  if (tx_thread_create(&ThreadUART4Receiver, "Thread UART4 Receiver", ThreadUART4Receiver_Entry, 0,
 							   pointer, APP_STACK_SIZE,
-							   THREAD_ONE_PRIO, THREAD_ONE_PREEMPTION_THRESHOLD,
+							   UART4_RECEIVER_THREAD_PRIO, UART4_RECEIVER_THREAD_PREEMPTION_THRESHOLD,
 							   TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
 		  {
 			ret = TX_THREAD_ERROR;
@@ -161,7 +161,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 		  /* Create ThreadUART5Sender.  */
 		  if (tx_thread_create(&ThreadUART5Sender, "Thread UART5 Sender", ThreadUART5Sender_Entry, 0,
 							   pointer, APP_STACK_SIZE,
-							   THREAD_ONE_PRIO, THREAD_ONE_PREEMPTION_THRESHOLD,
+							   UART5_SENDER_THREAD_PRIO, UART5_SENDER_THREAD_PREEMPTION_THRESHOLD,
 							   TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
 		  {
 			ret = TX_THREAD_ERROR;
@@ -177,7 +177,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 		  /* Create ThreadUART5Receiver.  */
 		  if (tx_thread_create(&ThreadUART5Receiver, "Thread UART5 Receiver", ThreadUART5Receiver_Entry, 0,
 							   pointer, APP_STACK_SIZE,
-							   THREAD_ONE_PRIO, THREAD_ONE_PREEMPTION_THRESHOLD,
+							   UART5_RECEIVER_THREAD_PRIO, UART5_RECEIVER_THREAD_PREEMPTION_THRESHOLD,
 							   TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
 		  {
 			ret = TX_THREAD_ERROR;
@@ -193,7 +193,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 		  /* Create ThreadUART6Sender.  */
 		  if (tx_thread_create(&ThreadUART6Sender, "Thread UART6 Sender", ThreadUART6Sender_Entry, 0,
 							   pointer, APP_STACK_SIZE,
-							   THREAD_ONE_PRIO, THREAD_ONE_PREEMPTION_THRESHOLD,
+							   UART6_SENDER_THREAD_PRIO, UART6_SENDER_THREAD_PREEMPTION_THRESHOLD,
 							   TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
 		  {
 			ret = TX_THREAD_ERROR;
@@ -209,7 +209,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 		  /* Create ThreadUART6Receiver.  */
 		  if (tx_thread_create(&ThreadUART6Receiver, "Thread UART6 Receiver", ThreadUART6Receiver_Entry, 0,
 							   pointer, APP_STACK_SIZE,
-							   THREAD_TWO_PRIO, THREAD_TWO_PREEMPTION_THRESHOLD,
+							   UART6_RECEIVER_THREAD_PRIO, UART6_RECEIVER_THREAD_PREEMPTION_THRESHOLD,
 							   TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
 		  {
 			ret = TX_THREAD_ERROR;
@@ -225,7 +225,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 		  /* Create ThreadPCSender.  */
 		  if (tx_thread_create(&ThreadPCSender, "Thread PC Sender", ThreadPCSender_Entry, 0,
 							   pointer, APP_STACK_SIZE,
-							   THREAD_ONE_PRIO, THREAD_ONE_PREEMPTION_THRESHOLD,
+							   PC_SENDER_THREAD_PRIO, PC_SENDER_THREAD_PREEMPTION_THRESHOLD,
 							   TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
 		  {
 			ret = TX_THREAD_ERROR;
@@ -241,7 +241,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 		  /* Create ThreadUART3Receiver.  */
 		  if (tx_thread_create(&ThreadPCReceiver, "Thread PC Receiver", ThreadPCReceiver_Entry, 0,
 							   pointer, APP_STACK_SIZE,
-							   THREAD_TWO_PRIO, THREAD_TWO_PREEMPTION_THRESHOLD,
+							   PC_RECEIVER_THREAD_PRIO, PC_RECEIVER_THREAD_PREEMPTION_THRESHOLD,
 							   TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
 		  {
 			ret = TX_THREAD_ERROR;
