@@ -98,6 +98,13 @@ extern TX_QUEUE QueueUART6Receiver;
 extern TX_QUEUE QueuePCReceiver;
 extern TX_QUEUE QueuePCSender;
 
+extern TX_QUEUE QueueUART4TimeStart;
+extern TX_QUEUE QueueUART4TimeFinish;
+extern TX_QUEUE QueueUART5TimeStart;
+extern TX_QUEUE QueueUART5TimeFinish;
+extern TX_QUEUE QueueUART6TimeStart;
+extern TX_QUEUE QueueUART6TimeFinish;
+
 /* USER CODE END 1 */
 
 #ifdef __cplusplus
