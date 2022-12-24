@@ -89,6 +89,7 @@ void ThreadPCSender_Entry(ULONG thread_input);
 void ThreadPCReceiver_Entry(ULONG thread_input);
 void App_Delay(uint32_t Delay);
 void my_timer_function(ULONG timer_input);
+uint8_t* SplitStr(uint8_t *Message);
 
 /* USER CODE END PFP */
 
@@ -519,14 +520,21 @@ void MainThread_Entry(ULONG thread_input)
 void ThreadUART4Sender_Entry(ULONG thread_input){
   UNUSED(thread_input);
   uint8_t *QueueUART4SenderData = malloc(UART4_MAX_MESSAGE_SIZE);
+  uint8_t sleep;
   uint8_t message_size;
   ULONG actual_flags;
   // Wait until QueueUART3Sender is not empty
   tx_event_flags_get(&EventFlag, EVENT_FLAG_RUN_UART4, TX_OR_CLEAR, &actual_flags, TX_WAIT_FOREVER);
   while(1){
+	// sleep
+	tx_queue_receive(&QueueUART4Sender, &QueueUART4SenderData, TX_WAIT_FOREVER);
+	UINT time_to_sleep = atoi(QueueUART4SenderData);
+
+	// data
     tx_queue_receive(&QueueUART4Sender, &QueueUART4SenderData, TX_WAIT_FOREVER);
-    QueueUART4SenderData[3] = 0;
     message_size = strlen(QueueUART4SenderData);
+
+	tx_thread_sleep(time_to_sleep);
 
     ULONG reschedule_ticks;
     tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
@@ -596,9 +604,15 @@ void ThreadUART5Sender_Entry(ULONG thread_input){
   // Wait until QueueUART3Sender is not empty
   tx_event_flags_get(&EventFlag, EVENT_FLAG_RUN_UART5, TX_OR_CLEAR, &actual_flags, TX_WAIT_FOREVER);
   while(1){
-    tx_queue_receive(&QueueUART5Sender, &QueueUART5SenderData, TX_WAIT_FOREVER);
-    QueueUART5SenderData[3] = 0;
-    message_size = strlen(QueueUART5SenderData);
+		// sleep
+		tx_queue_receive(&QueueUART5Sender, &QueueUART5SenderData, TX_WAIT_FOREVER);
+		UINT time_to_sleep = atoi(QueueUART5SenderData);
+
+		// data
+	    tx_queue_receive(&QueueUART5Sender, &QueueUART5SenderData, TX_WAIT_FOREVER);
+	    message_size = strlen(QueueUART5SenderData);
+
+		tx_thread_sleep(time_to_sleep);
 
     ULONG reschedule_ticks;
     tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
@@ -669,9 +683,15 @@ void ThreadUART6Sender_Entry(ULONG thread_input){
   // Wait until QueueUART6Sender is not empty
   tx_event_flags_get(&EventFlag, EVENT_FLAG_RUN_UART6, TX_OR_CLEAR, &actual_flags, TX_WAIT_FOREVER);
   while(1){
-    tx_queue_receive(&QueueUART6Sender, &QueueUART6SenderData, TX_WAIT_FOREVER);
-    QueueUART6SenderData[3] = 0;
-    message_size = strlen(QueueUART6SenderData);
+		// sleep
+		tx_queue_receive(&QueueUART6Sender, &QueueUART6SenderData, TX_WAIT_FOREVER);
+		UINT time_to_sleep = atoi(QueueUART6SenderData);
+
+		// data
+	    tx_queue_receive(&QueueUART6Sender, &QueueUART6SenderData, TX_WAIT_FOREVER);
+	    message_size = strlen(QueueUART6SenderData);
+
+		tx_thread_sleep(time_to_sleep);
 
     ULONG reschedule_ticks;
     tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
@@ -757,20 +777,32 @@ void ThreadPCReceiver_Entry(ULONG thread_input){
   while(1){
     tx_queue_receive(&QueuePCReceiver, &QueuePCReceiverData, TX_WAIT_FOREVER);
     if (QueuePCReceiverData[0] == '4' && QueuePCReceiverData[1] == ','){
-        uint8_t *Message = malloc((strlen(QueuePCReceiverData)-1) * sizeof(uint8_t));
-        memcpy(Message, QueuePCReceiverData + 2, strlen(QueuePCReceiverData)-2);
-        Message[strlen(QueuePCReceiverData)-2] = 0;
-        tx_queue_send(&QueueUART4Sender, &Message, TX_WAIT_FOREVER);
+        uint8_t *data = malloc((strlen(QueuePCReceiverData)-1) * sizeof(uint8_t));
+        memcpy(data, QueuePCReceiverData + 2, strlen(QueuePCReceiverData)-2);
+        data[strlen(QueuePCReceiverData)-2] = 0;
+        uint8_t *sleep = SplitStr(data);
+
+        tx_queue_send(&QueueUART4Sender, &sleep, TX_WAIT_FOREVER);
+        tx_queue_send(&QueueUART4Sender, &data, TX_WAIT_FOREVER);
+
     } else if (QueuePCReceiverData[0] == '5' && QueuePCReceiverData[1] == ','){
-        uint8_t *Message = malloc((strlen(QueuePCReceiverData)-1) * sizeof(uint8_t));
-        memcpy(Message, QueuePCReceiverData + 2, strlen(QueuePCReceiverData)-2);
-        Message[strlen(QueuePCReceiverData)-2] = 0;
-        tx_queue_send(&QueueUART5Sender, &Message, TX_WAIT_FOREVER);
+        uint8_t *data = malloc((strlen(QueuePCReceiverData)-1) * sizeof(uint8_t));
+        memcpy(data, QueuePCReceiverData + 2, strlen(QueuePCReceiverData)-2);
+        data[strlen(QueuePCReceiverData)-2] = 0;
+        uint8_t *sleep = SplitStr(data);
+
+        tx_queue_send(&QueueUART5Sender, &sleep, TX_WAIT_FOREVER);
+        tx_queue_send(&QueueUART5Sender, &data, TX_WAIT_FOREVER);
+
     } else if (QueuePCReceiverData[0] == '6' && QueuePCReceiverData[1] == ','){
-        uint8_t *Message = malloc((strlen(QueuePCReceiverData)-1) * sizeof(uint8_t));
-        memcpy(Message, QueuePCReceiverData + 2, strlen(QueuePCReceiverData)-2);
-        Message[strlen(QueuePCReceiverData)-2] = 0;
-        tx_queue_send(&QueueUART6Sender, &Message, TX_WAIT_FOREVER);
+        uint8_t *data = malloc((strlen(QueuePCReceiverData)-1) * sizeof(uint8_t));
+        memcpy(data, QueuePCReceiverData + 2, strlen(QueuePCReceiverData)-2);
+        data[strlen(QueuePCReceiverData)-2] = 0;
+        uint8_t *sleep = SplitStr(data);
+
+        tx_queue_send(&QueueUART6Sender, &sleep, TX_WAIT_FOREVER);
+        tx_queue_send(&QueueUART6Sender, &data, TX_WAIT_FOREVER);
+
     } else if (strcmp(QueuePCReceiverData, "Hello") == 0){
           uint8_t *Message = malloc((strlen("Azure RTOS Tester v0.1\n")+1) * sizeof(uint8_t));
           strcpy(Message, "Azure RTOS Tester v0.1\n");
@@ -796,6 +828,22 @@ void my_timer_function(ULONG timer_input){
 	UNUSED(timer_input);
 
 	timers_count += 1;
+}
+
+uint8_t* SplitStr(uint8_t *data){
+	uint8_t i = 0;
+	uint8_t ind = 0;
+	while (i < strlen(data)) {
+		if (data[i] == ',') {
+			ind = i;
+		}
+		++i;
+	}
+	uint8_t *sleep = malloc((strlen(data) - ind) * sizeof(uint8_t));
+	memcpy(sleep, data + ind + 1, strlen(data) - ind - 1);
+	sleep[strlen(data) - ind - 1] = 0;
+	data[ind] = 0;
+	return sleep;
 }
 
 /**
