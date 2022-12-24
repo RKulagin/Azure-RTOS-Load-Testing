@@ -168,10 +168,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	  data[UART4_size_of_rx_data] = 0;
 	  tx_queue_send(&QueueUART4Receiver, &data, TX_NO_WAIT);
 
-
 	  ULONG reschedule_ticks;
 	  tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
 	  tx_queue_send(&QueueUART4TimeFinish, &reschedule_ticks, TX_NO_WAIT);
+	  tx_queue_send(&QueueUART4TimeStart, &timers_count, TX_WAIT_FOREVER);
 
 	  UART4_size_of_rx_data = 0;
 	  memset(UART4_RX_data, 0, 256);
@@ -189,7 +189,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	  memcpy(data, UART5_RX_data, UART5_size_of_rx_data);
 	  data[UART5_size_of_rx_data] = 0;
 	  tx_queue_send(&QueueUART5Receiver, &data, TX_NO_WAIT);
-	  tx_queue_send(&QueueUART5TimeFinish, tx_time_get(), TX_NO_WAIT);
+
+	  ULONG reschedule_ticks;
+	  tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+	  tx_queue_send(&QueueUART5TimeFinish, &reschedule_ticks, TX_NO_WAIT);
+	  tx_queue_send(&QueueUART5TimeStart, &timers_count, TX_WAIT_FOREVER);
+
+
 	  UART5_size_of_rx_data = 0;
 	  memset(UART5_RX_data, 0, 256);
 	  HAL_UART_Receive_IT(&huart5, (uint8_t*)&UART5_RX_data, 1);
@@ -206,7 +212,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
     memcpy(data, UART6_RX_data, UART6_size_of_rx_data);
     data[UART6_size_of_rx_data] = 0;
     tx_queue_send(&QueueUART6Receiver, &data, TX_NO_WAIT);
-	tx_queue_send(&QueueUART6TimeFinish, tx_time_get(), TX_NO_WAIT);
+
+    ULONG reschedule_ticks;
+    tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+    tx_queue_send(&QueueUART6TimeFinish, &reschedule_ticks, TX_NO_WAIT);
+    tx_queue_send(&QueueUART6TimeStart, &timers_count, TX_WAIT_FOREVER);
+
+
     UART6_size_of_rx_data = 0;
     memset(UART6_RX_data, 0, 256);
     HAL_UART_Receive_IT(&huart6, (uint8_t*)&UART6_RX_data, 1);

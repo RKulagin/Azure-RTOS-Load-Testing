@@ -531,6 +531,7 @@ void ThreadUART4Sender_Entry(ULONG thread_input){
     ULONG reschedule_ticks;
     tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
     tx_queue_send(&QueueUART4TimeStart, &reschedule_ticks, TX_WAIT_FOREVER);
+    tx_queue_send(&QueueUART4TimeStart, &timers_count, TX_WAIT_FOREVER);
 
     HAL_UART_Transmit(&huart4, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart4, QueueUART4SenderData, message_size, 10000);
@@ -562,13 +563,19 @@ void ThreadUART4Receiver_Entry(ULONG thread_input){
     strcpy(message1, "UART4ST:");
     tx_queue_receive(&QueueUART4TimeStart, &QueueUART4ReceiverStart, TX_WAIT_FOREVER);
     utoa(QueueUART4ReceiverStart, message1 + strlen("UART4ST:"), 10);
+    strcat(message1, ",");
+    tx_queue_receive(&QueueUART4TimeStart, &QueueUART4ReceiverStart, TX_WAIT_FOREVER);
+    utoa(QueueUART4ReceiverStart, strlen(message1), 10);
     strcat(message1, "\n");
     tx_queue_send(&QueuePCSender, &message1, TX_WAIT_FOREVER);
 
     uint8_t *message2 = malloc(UART4_MAX_MESSAGE_SIZE+strlen("UART4ST:"));
-    strcpy(message2, "UART4RV:");
+    strcpy(message2, "UART4RW:");
     tx_queue_receive(&QueueUART4TimeFinish, &QueueUART4ReceiverFinish, TX_WAIT_FOREVER);
-    utoa(QueueUART4ReceiverFinish, message2 + strlen("UART4RV:"), 10);
+    utoa(QueueUART4ReceiverFinish, message2 + strlen("UART4ST:"), 10);
+    strcat(message2, ",");
+    tx_queue_receive(&QueueUART4TimeFinish, &QueueUART4ReceiverFinish, TX_WAIT_FOREVER);
+    utoa(QueueUART4ReceiverFinish, strlen(message2), 10);
     strcat(message2, "\n");
     tx_queue_send(&QueuePCSender, &message2, TX_WAIT_FOREVER);
 
@@ -593,7 +600,10 @@ void ThreadUART5Sender_Entry(ULONG thread_input){
     QueueUART5SenderData[3] = 0;
     message_size = strlen(QueueUART5SenderData);
 
-    tx_queue_send(&QueueUART5TimeStart, tx_time_get(), TX_WAIT_FOREVER);
+    ULONG reschedule_ticks;
+    tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+    tx_queue_send(&QueueUART5TimeStart, &reschedule_ticks, TX_WAIT_FOREVER);
+    tx_queue_send(&QueueUART5TimeStart, &timers_count, TX_WAIT_FOREVER);
 
     HAL_UART_Transmit(&huart5, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart5, QueueUART5SenderData, message_size, 10000);
@@ -621,17 +631,23 @@ void ThreadUART5Receiver_Entry(ULONG thread_input){
     strcat(message, QueueUART5ReceiverData);
     tx_queue_send(&QueuePCSender, &message, TX_WAIT_FOREVER);
 
-    uint8_t *message1 = malloc(UART5_MAX_MESSAGE_SIZE+strlen("UART5ST:"));
+    uint8_t *message1 = malloc(UART5_MAX_MESSAGE_SIZE+strlen("UART4ST:"));
     strcpy(message1, "UART5ST:");
     tx_queue_receive(&QueueUART5TimeStart, &QueueUART5ReceiverStart, TX_WAIT_FOREVER);
     utoa(QueueUART5ReceiverStart, message1 + strlen("UART5ST:"), 10);
+    strcat(message1, ",");
+    tx_queue_receive(&QueueUART5TimeStart, &QueueUART5ReceiverStart, TX_WAIT_FOREVER);
+    utoa(QueueUART5ReceiverStart, strlen(message1), 10);
     strcat(message1, "\n");
     tx_queue_send(&QueuePCSender, &message1, TX_WAIT_FOREVER);
 
     uint8_t *message2 = malloc(UART5_MAX_MESSAGE_SIZE+strlen("UART5ST:"));
-    strcpy(message2, "UART5RV:");
+    strcpy(message2, "UART5RW:");
     tx_queue_receive(&QueueUART5TimeFinish, &QueueUART5ReceiverFinish, TX_WAIT_FOREVER);
-    utoa(QueueUART5ReceiverFinish, message2 + strlen("UART5RV:"), 10);
+    utoa(QueueUART5ReceiverFinish, message2 + strlen("UART4ST:"), 10);
+    strcat(message2, ",");
+    tx_queue_receive(&QueueUART5TimeFinish, &QueueUART5ReceiverFinish, TX_WAIT_FOREVER);
+    utoa(QueueUART5ReceiverFinish, strlen(message2), 10);
     strcat(message2, "\n");
     tx_queue_send(&QueuePCSender, &message2, TX_WAIT_FOREVER);
 
@@ -657,7 +673,11 @@ void ThreadUART6Sender_Entry(ULONG thread_input){
     QueueUART6SenderData[3] = 0;
     message_size = strlen(QueueUART6SenderData);
 
-    tx_queue_send(&QueueUART6TimeStart, tx_time_get(), TX_WAIT_FOREVER);
+    ULONG reschedule_ticks;
+    tx_timer_info_get(&my_timer, TX_NULL, TX_NULL, &reschedule_ticks, TX_NULL, TX_NULL);
+    reschedule_ticks +=
+    tx_queue_send(&QueueUART6TimeStart, &reschedule_ticks, TX_WAIT_FOREVER);
+    tx_queue_send(&QueueUART6TimeStart, &timers_count, TX_WAIT_FOREVER);
 
     HAL_UART_Transmit(&huart6, &message_size, 1, 1000);
     HAL_UART_Transmit(&huart6, QueueUART6SenderData, message_size, 10000);
@@ -688,13 +708,19 @@ void ThreadUART6Receiver_Entry(ULONG thread_input){
     strcpy(message1, "UART6ST:");
     tx_queue_receive(&QueueUART6TimeStart, &QueueUART6ReceiverStart, TX_WAIT_FOREVER);
     utoa(QueueUART6ReceiverStart, message1 + strlen("UART6ST:"), 10);
+    strcat(message1, ",");
+    tx_queue_receive(&QueueUART6TimeStart, &QueueUART6ReceiverStart, TX_WAIT_FOREVER);
+    utoa(QueueUART6ReceiverStart, strlen(message1), 10);
     strcat(message1, "\n");
     tx_queue_send(&QueuePCSender, &message1, TX_WAIT_FOREVER);
 
     uint8_t *message2 = malloc(UART6_MAX_MESSAGE_SIZE+strlen("UART6ST:"));
-    strcpy(message2, "UART6RV:");
+    strcpy(message2, "UART6RW:");
     tx_queue_receive(&QueueUART6TimeFinish, &QueueUART6ReceiverFinish, TX_WAIT_FOREVER);
-    utoa(QueueUART6ReceiverFinish, message2 + strlen("UART6RV:"), 10);
+    utoa(QueueUART6ReceiverFinish, message2 + strlen("UART6ST:"), 10);
+    strcat(message2, ",");
+    tx_queue_receive(&QueueUART6TimeFinish, &QueueUART6ReceiverFinish, TX_WAIT_FOREVER);
+    utoa(QueueUART6ReceiverFinish, strlen(message2), 10);
     strcat(message2, "\n");
     tx_queue_send(&QueuePCSender, &message2, TX_WAIT_FOREVER);
 
