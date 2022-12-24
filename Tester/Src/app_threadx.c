@@ -372,8 +372,8 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 			ret = TX_QUEUE_ERROR;
 		  }
 
-		  /* Create queue for PC Receiver*/
-		  if (tx_timer_create(&my_timer, "my_timer_name", my_timer_function, 0, 0xFFFFFFFF, 0xFFFFFFFF, TX_AUTO_ACTIVATE) != TX_SUCCESS)
+		  /* Create timer */
+		  if (tx_timer_create(&my_timer, "my_timer_name", my_timer_function, 0, 0xFFFFFFFE, 0xFFFFFFFE, TX_AUTO_ACTIVATE) != TX_SUCCESS)
 		  {
 			  ret = TX_TIMER_ERROR;
 		  }
@@ -565,7 +565,7 @@ void ThreadUART4Receiver_Entry(ULONG thread_input){
     utoa(QueueUART4ReceiverStart, message1 + strlen("UART4ST:"), 10);
     strcat(message1, ",");
     tx_queue_receive(&QueueUART4TimeStart, &QueueUART4ReceiverStart, TX_WAIT_FOREVER);
-    utoa(QueueUART4ReceiverStart, strlen(message1), 10);
+    utoa(QueueUART4ReceiverStart, message1 + strlen(message1), 10);
     strcat(message1, "\n");
     tx_queue_send(&QueuePCSender, &message1, TX_WAIT_FOREVER);
 
@@ -575,7 +575,7 @@ void ThreadUART4Receiver_Entry(ULONG thread_input){
     utoa(QueueUART4ReceiverFinish, message2 + strlen("UART4ST:"), 10);
     strcat(message2, ",");
     tx_queue_receive(&QueueUART4TimeFinish, &QueueUART4ReceiverFinish, TX_WAIT_FOREVER);
-    utoa(QueueUART4ReceiverFinish, strlen(message2), 10);
+    utoa(QueueUART4ReceiverFinish, message2 + strlen(message2), 10);
     strcat(message2, "\n");
     tx_queue_send(&QueuePCSender, &message2, TX_WAIT_FOREVER);
 
@@ -631,15 +631,15 @@ void ThreadUART5Receiver_Entry(ULONG thread_input){
     strcat(message, QueueUART5ReceiverData);
     tx_queue_send(&QueuePCSender, &message, TX_WAIT_FOREVER);
 
-    uint8_t *message1 = malloc(UART5_MAX_MESSAGE_SIZE+strlen("UART4ST:"));
-    strcpy(message1, "UART5ST:");
-    tx_queue_receive(&QueueUART5TimeStart, &QueueUART5ReceiverStart, TX_WAIT_FOREVER);
-    utoa(QueueUART5ReceiverStart, message1 + strlen("UART5ST:"), 10);
-    strcat(message1, ",");
-    tx_queue_receive(&QueueUART5TimeStart, &QueueUART5ReceiverStart, TX_WAIT_FOREVER);
-    utoa(QueueUART5ReceiverStart, strlen(message1), 10);
-    strcat(message1, "\n");
-    tx_queue_send(&QueuePCSender, &message1, TX_WAIT_FOREVER);
+//    uint8_t *message1 = malloc(UART5_MAX_MESSAGE_SIZE+strlen("UART4ST:"));
+//    strcpy(message1, "UART5ST:");
+//    tx_queue_receive(&QueueUART5TimeStart, &QueueUART5ReceiverStart, TX_WAIT_FOREVER);
+//    utoa(QueueUART5ReceiverStart, message1 + strlen("UART5ST:"), 10);
+//    strcat(message1, ",");
+//    tx_queue_receive(&QueueUART5TimeStart, &QueueUART5ReceiverStart, TX_WAIT_FOREVER);
+//    utoa(QueueUART5ReceiverStart, message1 + strlen(message1), 10);
+//    strcat(message1, "\n");
+//    tx_queue_send(&QueuePCSender, &message1, TX_WAIT_FOREVER);
 
     uint8_t *message2 = malloc(UART5_MAX_MESSAGE_SIZE+strlen("UART5ST:"));
     strcpy(message2, "UART5RW:");
@@ -647,7 +647,7 @@ void ThreadUART5Receiver_Entry(ULONG thread_input){
     utoa(QueueUART5ReceiverFinish, message2 + strlen("UART4ST:"), 10);
     strcat(message2, ",");
     tx_queue_receive(&QueueUART5TimeFinish, &QueueUART5ReceiverFinish, TX_WAIT_FOREVER);
-    utoa(QueueUART5ReceiverFinish, strlen(message2), 10);
+    utoa(QueueUART5ReceiverFinish, message2 + strlen(message2), 10);
     strcat(message2, "\n");
     tx_queue_send(&QueuePCSender, &message2, TX_WAIT_FOREVER);
 
@@ -710,7 +710,7 @@ void ThreadUART6Receiver_Entry(ULONG thread_input){
     utoa(QueueUART6ReceiverStart, message1 + strlen("UART6ST:"), 10);
     strcat(message1, ",");
     tx_queue_receive(&QueueUART6TimeStart, &QueueUART6ReceiverStart, TX_WAIT_FOREVER);
-    utoa(QueueUART6ReceiverStart, strlen(message1), 10);
+    utoa(QueueUART6ReceiverStart, message1 + strlen(message1), 10);
     strcat(message1, "\n");
     tx_queue_send(&QueuePCSender, &message1, TX_WAIT_FOREVER);
 
@@ -720,7 +720,7 @@ void ThreadUART6Receiver_Entry(ULONG thread_input){
     utoa(QueueUART6ReceiverFinish, message2 + strlen("UART6ST:"), 10);
     strcat(message2, ",");
     tx_queue_receive(&QueueUART6TimeFinish, &QueueUART6ReceiverFinish, TX_WAIT_FOREVER);
-    utoa(QueueUART6ReceiverFinish, strlen(message2), 10);
+    utoa(QueueUART6ReceiverFinish, message2+ strlen(message2), 10);
     strcat(message2, "\n");
     tx_queue_send(&QueuePCSender, &message2, TX_WAIT_FOREVER);
 

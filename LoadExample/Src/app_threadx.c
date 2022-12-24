@@ -386,71 +386,71 @@ void MX_ThreadX_Init(void)
   */
 void MainThread_Entry(ULONG thread_input)
 {
-//  UNUSED(thread_input);
-//
-//  UINT N = 50;
-//
-//  // выделяем память
-//  UINT **A = (UINT**)malloc(N * sizeof(UINT*));
-//  UINT **B = (UINT**)malloc(N * sizeof(UINT*));
-//  UINT **C = (UINT**)malloc(N * sizeof(UINT*));
-//  for (UINT i = 0; i < N; i++)
-//  {
-//	  A[i] = (UINT*)malloc(N * sizeof(UINT));
-//	  B[i] = (UINT*)malloc(N * sizeof(UINT));
-//	  C[i] = (UINT*)malloc(N * sizeof(UINT));
-//  }
-//
-//  // заполняем случайными значениями
-//  srand(time(NULL));
-//  for (UINT i = 0; i < N; i++){
-//	  for (UINT j = 0; j < N; j++) {
-//		  A[i][j] = rand() % 256;
-//		  B[i][j] = rand() % 256;
-//      }
-//  }
-//
-//  while(1) {
-//
-//
-//	  for (UINT ind = 0; ind < 2; ind++){
-//		  // C = A * B
-//		  MatrixMult(A, B, C, N);
-//
-//		  // C = B * A
-//		  MatrixMult(B, A, C, N);
-//
-//		  // B = A * A
-//		  MatrixMult(A, A, B, N);
-//
-//		  // A = C * C
-//		  MatrixMult(C, C, A, N);
-//	  }
-//	  BSP_LED_Toggle(LED_BLUE);
-//
-////	  UINT det = matrixDet(C, N);
-//	  UINT det = A[0][0];
-//	  char* message = malloc(256);
-//	  memset(message, 0, 256);
-//	  itoa(det, message, 10);
-//	  message[strlen(message)] = '\n';
-//
-//	  BSP_LED_Toggle(LED_RED);
-//	  tx_queue_send(&QueueUART5Sender, &message, TX_WAIT_FOREVER);
-//	  BSP_LED_Toggle(LED_BLUE);
-//   }
-//
-//  // освобождаем память
-//  for (UINT i = 0; i < N; i++)
-//  {
-//    	free(A[i]);
-//    	free(B[i]);
-//    	free(C[i]);
-//  }
-//
-//  free(A);
-//  free(B);
-//  free(C);
+  UNUSED(thread_input);
+
+  UINT N = 50;
+
+  // выделяем память
+  UINT **A = (UINT**)malloc(N * sizeof(UINT*));
+  UINT **B = (UINT**)malloc(N * sizeof(UINT*));
+  UINT **C = (UINT**)malloc(N * sizeof(UINT*));
+  for (UINT i = 0; i < N; i++)
+  {
+	  A[i] = (UINT*)malloc(N * sizeof(UINT));
+	  B[i] = (UINT*)malloc(N * sizeof(UINT));
+	  C[i] = (UINT*)malloc(N * sizeof(UINT));
+  }
+
+  // заполняем случайными значениями
+  srand(time(NULL));
+  for (UINT i = 0; i < N; i++){
+	  for (UINT j = 0; j < N; j++) {
+		  A[i][j] = rand() % 256;
+		  B[i][j] = rand() % 256;
+      }
+  }
+
+  while(1) {
+
+
+	  for (UINT ind = 0; ind < 2; ind++){
+		  // C = A * B
+		  MatrixMult(A, B, C, N);
+
+		  // C = B * A
+		  MatrixMult(B, A, C, N);
+
+		  // B = A * A
+		  MatrixMult(A, A, B, N);
+
+		  // A = C * C
+		  MatrixMult(C, C, A, N);
+	  }
+	  BSP_LED_Toggle(LED_BLUE);
+
+//	  UINT det = matrixDet(C, N);
+	  UINT det = A[0][0];
+	  char* message = malloc(256);
+	  memset(message, 0, 256);
+	  itoa(det, message, 10);
+	  message[strlen(message)] = '\n';
+
+	  BSP_LED_Toggle(LED_RED);
+	  tx_queue_send(&QueueUART5Sender, &message, TX_WAIT_FOREVER);
+	  BSP_LED_Toggle(LED_BLUE);
+   }
+
+  // освобождаем память
+  for (UINT i = 0; i < N; i++)
+  {
+    	free(A[i]);
+    	free(B[i]);
+    	free(C[i]);
+  }
+
+  free(A);
+  free(B);
+  free(C);
 
 	  /* Infinite loop */
 	  while (1){
