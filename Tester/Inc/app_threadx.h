@@ -108,7 +108,6 @@ void MX_ThreadX_Init(void);
 #define QUEUE_PC_RECEIVER_SIZE                   256
 
 
-
 #define UART4_MAX_MESSAGE_SIZE                   256
 #define UART5_MAX_MESSAGE_SIZE                   256
 #define UART6_MAX_MESSAGE_SIZE                   256
@@ -130,6 +129,7 @@ extern TX_QUEUE QueueUART5TimeFinish;
 extern TX_QUEUE QueueUART6TimeStart;
 extern TX_QUEUE QueueUART6TimeFinish;
 extern TX_TIMER my_timer;
+extern ULONG timers_count;
 
 /* USER CODE END 1 */
 
