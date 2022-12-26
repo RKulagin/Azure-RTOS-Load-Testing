@@ -116,15 +116,15 @@ class App(customtkinter.CTk):
         self.status_label = customtkinter.CTkLabel(self.status_frame, text="Status checklist: ", font=customtkinter.CTkFont(size=20, weight="bold"))
         self.status_label.grid(row=0, column=0, padx=20, pady=(20, 10))
         self.status_checkbox = []
-        for idx, item in enumerate(["Select Com Port", "Select File", "Connected to Tester", "Load Data To Tester", "Press Run Button", "Receiving Data", "Data Received", "Data Processing", "Data Processed", "Data Saving", "Data Saved"]):
+        for idx, item in enumerate(["Select Com Port", "Select File", "Connected to Tester", "Load Data To Tester", "Press Run Button", "Receiving Data", "Data Received", "Open Statistics Window"]):
             # create status checkbox
             self.status_checkbox.append(customtkinter.CTkCheckBox(self.status_frame, text=item, font=customtkinter.CTkFont(size=12), state="disabled", text_color_disabled="black",))
             self.status_checkbox[-1].grid(row=idx+1, column=0, padx=20, pady=(10, 5), sticky="w")
         
         # create progress bar
-        self.progress_bar = customtkinter.CTkProgressBar(self.status_frame)
-        self.progress_bar.grid(row=1+len(self.status_checkbox), column=0, padx=20, pady=(20, 10), sticky="w")
-        self.progress_bar.set(0)
+        # self.progress_bar = customtkinter.CTkProgressBar(self.status_frame)
+        # self.progress_bar.grid(row=1+len(self.status_checkbox), column=0, padx=20, pady=(20, 10), sticky="w")
+        # self.progress_bar.set(0)
 
     def calculate_statistics(self):
         df = pd.DataFrame(self.received_data)
@@ -150,6 +150,8 @@ class App(customtkinter.CTk):
         self.uart6rx = uart6rx
 
     def show_statistics_windows(self):
+        # set checkbox to checked
+        self.status_checkbox[7].select()
         self.calculate_statistics()
         self.statistics_window = customtkinter.CTkToplevel(self)
         self.statistics_window.title("Statistics")
@@ -169,12 +171,14 @@ class App(customtkinter.CTk):
 
         toolbar = NavigationToolbar2Tk(canvas, frame_top)
         toolbar.update()
+        self.save_data()
 
 
     
     def save_data(self):
-        # self.calculate_statistics()
-        with open("data.csv", "w") as f:
+        # get filename to save file
+        filename = tkinter.filedialog.asksaveasfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
+        with open(filename, "w") as f:
             f.writelines(self.received_data)
 
 
@@ -324,13 +328,6 @@ class App(customtkinter.CTk):
                             self.save_button.configure(state="normal")
                             self.status_checkbox[5].select()
                             self.status_checkbox[6].select()
-                            if self.drawing_latch:
-                                self.status_checkbox[7].select()
-                                self.status_checkbox[8].select()
-                                if self.saved_latch:
-                                    self.status_checkbox[9].select()
-                                    self.status_checkbox[10].select()
-
                 
 
 
