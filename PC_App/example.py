@@ -7,21 +7,250 @@ import os
 import tkinter.messagebox
 import customtkinter
 
+from asyncio import get_event_loop
+from serial_asyncio import open_serial_connection
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.figure import Figure
+
+import pandas as pd
+import numpy as np
+
 customtkinter.set_appearance_mode("Light")
 customtkinter.set_default_color_theme("blue")
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
-class ComPortSelectorFrame(customtkinter.CTkFrame):
-    def __init__(self, *args, header_name="ComPortSelectorFrame", **kwargs):
-        super().__init__(*args, **kwargs)
+class App(customtkinter.CTk):
+    def __init__(self):
+        super().__init__()
 
+        self.serial = None
+        self.received_data = []
+        self.loaded_latch = False
+        self.drawing_latch = False
+        self.saved_latch = False
+        self.len = dict()
+        # configure window
+        self.title("Azure RTOS Load Testing Tool")
+        self.geometry(f"{1100}x{800}")
+        # configure grid layout (4x4)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure((2, 3), weight=0)
+        self.grid_rowconfigure((0, 1, 2), weight=1)
+
+        # create sidebar frame with widgets
+        self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
+        self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
+        self.sidebar_frame.grid_rowconfigure(4, weight=1)
+        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="ThreadX Load Testing", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
+        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="© R.Kulagin & A.Dorodnyaya, 2022", font=customtkinter.CTkFont(size=14))
+        self.logo_label.grid(row=1, column=0, padx=20, pady=(20, 10))
+
+        # com port selector frame
+        self.com_port_selector_frame = customtkinter.CTkFrame(self.sidebar_frame)
+        self.com_port_selector_frame.grid(row=2, column=0, sticky="nsew")
         # option menu for com port selection
-        self.com = customtkinter.CTkOptionMenu(master=self, values = self.get_available_com_ports(), command=self.com_port_selected)
+        self.com = customtkinter.CTkOptionMenu(master=self.com_port_selector_frame, values = self.get_available_com_ports(), command=self.com_port_selected)
         self.com.grid(row=0, column=0, padx=20, pady=(20, 10))
 
         # button to refresh com ports
-        self.refresh_button = customtkinter.CTkButton(master=self, text="Refresh", command=self.refresh_com_ports)
+        self.refresh_button = customtkinter.CTkButton(master=self.com_port_selector_frame, text="Refresh", command=self.refresh_com_ports)
         self.refresh_button.grid(row=1, column=0, padx=20, pady=(20, 10))
+
+        # button to connect to com port
+        self.connect_button = customtkinter.CTkButton(master=self.com_port_selector_frame, text="Connect", command=self.connect_to_com)
+        self.connect_button.grid(row=2, column=0, padx=20, pady=(20, 10))
+
+        # file selector frame
+        self.file_selector_frame = customtkinter.CTkFrame(self.sidebar_frame)
+        self.file_selector_frame.grid(row=3, column=0, sticky="nsew")
+
+        # file selector 
+        self.file = customtkinter.CTkLabel(master=self.file_selector_frame, text="No File Selected")
+        self.file.grid(row=0, column=0, padx=20, pady=(20, 10))
+
+        self.file_loader = customtkinter.CTkButton(master=self.file_selector_frame, text="Select File", command=self.load_file)
+        self.file_loader.grid(row=1, column=0, padx=20, pady=(20, 10))
+
+        self.filepath = None
+
+        # create main frame with widgets
+        self.main_frame = customtkinter.CTkFrame(self, corner_radius=0, width=700, height=400)
+        self.main_frame.grid(row=0, column=1, rowspan=2, sticky="nsew")
+
+        # Text widget for displaying the log filling full available space
+        self.log = customtkinter.CTkTextbox(self.main_frame, height=400, width=self.main_frame.cget("width"))
+        self.log.grid(row=0, column=0, sticky="nsew")
+
+        # Image widget for displaying the graph filling full  available space
+        # self.graph = customtkinter.CTkImage(self.main_frame)
+        # self.graph.grid(row=0, column=1, sticky="nsew")
+
+        # create right frame with widgets
+        self.right_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
+        self.right_frame.grid(row=0, column=2, rowspan=4, sticky="nsew")
+        self.right_frame.grid_rowconfigure(4, weight=1)
+        
+
+        # create communcation frame with widgets
+        self.communication_frame = customtkinter.CTkFrame(self.right_frame, corner_radius=0)
+        self.communication_frame.grid(row=0, column=0, sticky="nsew")
+        # create load_data button
+        self.load_data_button = customtkinter.CTkButton(self.communication_frame, text="Load Data", command=self.load_data, state=tkinter.DISABLED)
+        self.load_data_button.grid(row=0, column=0, padx=20, pady=(20, 10))
+        # create run button
+        self.run_button = customtkinter.CTkButton(self.communication_frame, text="Run", command=self.run_test, state=tkinter.DISABLED)
+        self.run_button.grid(row=1, column=0, padx=20, pady=(20, 10))
+        # create save button
+        self.save_button = customtkinter.CTkButton(self.communication_frame, text="Save", command=self.show_statistics_windows, state=tkinter.DISABLED)
+        self.save_button.grid(row=2, column=0, padx=20, pady=(20, 10))
+
+        # create status frame with widgets
+        self.status_frame = customtkinter.CTkFrame(self.right_frame, corner_radius=0)
+        self.status_frame.grid(row=1, column=0, sticky="nsew")
+        
+        # create status label
+        self.status_label = customtkinter.CTkLabel(self.status_frame, text="Status checklist: ", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.status_label.grid(row=0, column=0, padx=20, pady=(20, 10))
+        self.status_checkbox = []
+        for idx, item in enumerate(["Select Com Port", "Select File", "Connected to Tester", "Load Data To Tester", "Press Run Button", "Receiving Data", "Data Received", "Data Processing", "Data Processed", "Data Saving", "Data Saved"]):
+            # create status checkbox
+            self.status_checkbox.append(customtkinter.CTkCheckBox(self.status_frame, text=item, font=customtkinter.CTkFont(size=12), state="disabled", text_color_disabled="black",))
+            self.status_checkbox[-1].grid(row=idx+1, column=0, padx=20, pady=(10, 5), sticky="w")
+        
+        # create progress bar
+        self.progress_bar = customtkinter.CTkProgressBar(self.status_frame)
+        self.progress_bar.grid(row=1+len(self.status_checkbox), column=0, padx=20, pady=(20, 10), sticky="w")
+        self.progress_bar.set(0)
+
+    def calculate_statistics(self):
+        df = pd.DataFrame(self.received_data)
+        uart4rx = df[df[0].str.startswith('UART4RW:')]
+        uart5rx = df[df[0].str.startswith('UART5RW:')]
+        uart6rx = df[df[0].str.startswith('UART6RW:')]
+        uart4rx[0] = uart4rx[0].str.replace('UART4RW:', '')
+        uart4rx[0] = uart4rx[0].str.replace(',0','')
+        uart4rx[0] = uart4rx[0].astype(dtype=np.int64)
+        uart5rx[0] = uart5rx[0].str.replace('UART5RW:', '')
+        uart5rx[0] = uart5rx[0].str.replace(',0','')
+        uart5rx[0] = uart5rx[0].astype(dtype=np.int64)
+        uart6rx[0] = uart6rx[0].str.replace('UART6RW:', '')
+        uart6rx[0] = uart6rx[0].str.replace(',0','')
+        uart6rx[0] = uart6rx[0].astype(dtype=np.int64)
+
+        m = max([uart4rx[0].max(), uart5rx[0].max(), uart6rx[0].max()])
+        uart4rx[0] = m - uart4rx[0] 
+        uart5rx[0] = m - uart5rx[0] 
+        uart6rx[0] = m - uart6rx[0] 
+        self.uart4rx = uart4rx
+        self.uart5rx = uart5rx
+        self.uart6rx = uart6rx
+
+    def show_statistics_windows(self):
+        self.calculate_statistics()
+        self.statistics_window = customtkinter.CTkToplevel(self)
+        self.statistics_window.title("Statistics")
+        self.statistics_window.geometry("800x600")
+        frame_top = tkinter.Frame(self.statistics_window)
+        frame_top.pack(fill='both', expand=True)
+        fig = Figure(dpi=100) # figsize=(10, 6), 
+        ax = fig.add_subplot(111)
+        ax.plot(self.uart4rx[0], [0.9] * len(self.uart4rx), 'bo')
+        ax.plot(self.uart5rx[0], [0.95] * len(self.uart5rx), 'go')
+        ax.plot(self.uart6rx[0], [1] * len(self.uart6rx), 'ro')
+        for x, s in zip(self.uart5rx[0].tolist()[:-1], self.uart5rx[0].diff().dropna().abs().tolist()):
+            ax.annotate(s, xy=(x+3, 0.955), fontsize=8)
+        canvas = FigureCanvasTkAgg(fig, master=frame_top)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
+
+        toolbar = NavigationToolbar2Tk(canvas, frame_top)
+        toolbar.update()
+
+
+    
+    def save_data(self):
+        # self.calculate_statistics()
+        with open("data.csv", "w") as f:
+            f.writelines(self.received_data)
+
+
+    def run_test(self):
+        # Send "Run" command to tester
+        self.serial.write(bytes(b"Run\0"))
+        while True:
+            # Receive line from tester
+            response = self.serial.readline().decode()
+            # If line is empty, skip
+            if response == '':
+                continue
+            # If line starts with `UART4:` decrement len['4']
+            if response.startswith('UART4:'):
+                self.len['4'] -= 1
+            # If line starts with `UART6:` decrement len['6']
+            elif response.startswith('UART6:'):
+                self.len['6'] -= 1
+            # Save response to log
+            self.print(response)
+            self.received_data.append(response)
+            # If len['4'] and len['6'] are both 0, break
+            if self.len['4'] == 0 and self.len['6'] == 0:
+                break
+
+
+        
+    # Load data through serial connection
+    def load_data(self):
+        if (self.serial is None):
+            self.print(text = 'Not connected to tester.')
+            return
+        if self.filepath == 'No File Selected' or self.filepath == None:
+            self.status_label.config(text = 'No file selected.')
+            return
+        # Load data from file
+        with open(self.filepath, 'r') as file:
+            data = file.readlines()
+        self.len = {"4" : 0, "6": 0}
+        # Send data to tester
+        for line in data:
+            self.serial.write(bytes(line[:-1] + '\0', 'utf-8'))
+            self.len[line[0]] += 1
+        self.print(text = f"Data loaded to tester. UART4: {self.len['4']}, UART6: {self.len['6']}")
+
+    def connect_to_com(self):
+        self.print(f"Connecting to {self.com.get()} port.\n")
+        # Open connection to COM port
+
+        ser = serial.Serial(
+            port = self.com.get(),
+            baudrate=115200,
+            parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE,
+            bytesize=serial.EIGHTBITS
+        )
+        try:
+            if ser.isOpen():
+                ser.close()
+            ser.open()
+            # Send hello to selected COM port
+            ser.write(bytes(b"Hello\0"))
+            # Receive response from COM port
+            ATTEMPTS = 20
+            for attempt in range(ATTEMPTS):
+                response = ser.readline().decode()
+                self.print(response)
+                if response == "Azure RTOS Tester v0.1\n":
+                    self.print(f"Connected to {self.com.get()} port.\n")   
+                    self.serial = ser
+                    return    
+            self.print(f"Can't connect to {self.com.get()} port. Response: {response}.\n")
+        except Exception as e:
+            tkinter.messagebox.showerror("Error", e)
+            self.print(f"Can't connect to {self.com.get()} port. Error: {e}.\n")
+
 
     def get_available_com_ports(self):
         """ Lists serial port names
@@ -41,7 +270,7 @@ class ComPortSelectorFrame(customtkinter.CTkFrame):
         else:
             raise EnvironmentError('Unsupported platform')
 
-        result = []
+        result = [""]
         for port in ports:
             try:
                 s = serial.Serial(port)
@@ -55,242 +284,54 @@ class ComPortSelectorFrame(customtkinter.CTkFrame):
         self.com.configure(values = self.get_available_com_ports())     
 
     def com_port_selected(self, event):
-        print(event)
+        # self.print(event + '\n')
         if event == "":
             tkinter.messagebox.showerror("Error", "No COM port selected")
         else:
-            print("COM port selected: " + event)
-
-
-class FileSelectorFrame(customtkinter.CTkFrame):
-    def __init__(self, *args, header_name="FileSelectorFrame", **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # file selector 
-        self.file = customtkinter.CTkLabel(master=self, text="No File Selected")
-        self.file.grid(row=0, column=0, padx=20, pady=(20, 10))
-
-        self.file_loader = customtkinter.CTkButton(master=self, text="Select File", command=self.load_file)
-        self.file_loader.grid(row=1, column=0, padx=20, pady=(20, 10))
-
-        self.filepath = None
-
+            self.print(f"COM port selected: {event}.\n")
 
     def load_file(self):
         self.filepath = filedialog.askopenfilename(initialdir=os.getcwd(), title='Select a File', filetypes=(('Text Files', '*.txt'), ('All Files', '*.*')))
         self.file.configure(text=self.filepath.split("/")[-1] if self.file else "No File Selected")
+        self.print(f"File selected: {self.filepath}.\n")
 
-# class PrioritySelectorFrame(customtkinter.CTkFrame):
-#     def __init__(self, *args, header_name="PrioritySelectorFrame", **kwargs):
-#         super().__init__(*args, **kwargs)
+    def print(self, text):
+        self.log.insert(tkinter.END, text)
+        self.update_states()
 
-#         # option menu for com port selection
-#         self.priority 
+    def update_states(self):
+        self.load_data_button.configure(state="disabled")
+        self.run_button.configure(state="disabled")
+        for checkbox in self.status_checkbox:
+            checkbox.deselect()
 
-class App(customtkinter.CTk):
-    def __init__(self):
-        super().__init__()
+        if self.filepath != None:
+            self.status_checkbox[1].select() # Select File
+        # Check that com port is selected
+        if self.com.get() != "":
+            self.status_checkbox[0].select() # Select Com Port
+            if self.serial != None and self.serial.isOpen():
+                self.status_checkbox[2].select()
+                if self.filepath != None:
+                    self.load_data_button.configure(state="normal")
+                    self.status_checkbox[1].select() # Select File  
+                    if ("4" in self.len and self.len["4"] > 0) or ("6" in self.len and self.len["6"] > 0) or self.loaded_latch:
+                        self.loaded_latch = True
+                        self.run_button.configure(state="normal")
+                        self.status_checkbox[3].select()
+                        if len(self.received_data) > 0:
+                            self.status_checkbox[4].select()
+                            self.save_button.configure(state="normal")
+                            self.status_checkbox[5].select()
+                            self.status_checkbox[6].select()
+                            if self.drawing_latch:
+                                self.status_checkbox[7].select()
+                                self.status_checkbox[8].select()
+                                if self.saved_latch:
+                                    self.status_checkbox[9].select()
+                                    self.status_checkbox[10].select()
 
-        # configure window
-        self.title("Azure RTOS Load Testing Tool")
-        self.geometry(f"{1100}x{800}")
-        # configure grid layout (4x4)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_columnconfigure((2, 3), weight=0)
-        self.grid_rowconfigure((0, 1, 2), weight=1)
-
-        # create sidebar frame with widgets
-        self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
-        self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="ThreadX Load Testing", font=customtkinter.CTkFont(size=20, weight="bold"))
-        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
-        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="© R.Kulagin & A.Dorodnyaya, 2022", font=customtkinter.CTkFont(size=14))
-        self.logo_label.grid(row=1, column=0, padx=20, pady=(20, 10))
-
-        # com port selector frame
-        self.com_port_selector_frame = ComPortSelectorFrame(self)
-        self.com_port_selector_frame.grid(row=1, column=0, padx=20, pady=10)
-
-        # file selector frame
-        self.file_selector_frame = FileSelectorFrame(self)
-        self.file_selector_frame.grid(row=2, column=0, padx=20, pady=10)
-        
-        # # priority selector frame
-        # self.priority_selector_frame = PrioritySelectorFrame(self)
-        # self.priority_selector_frame.grid(row=3, column=0, padx=20, pady=10)
-    
-        # create main frame with widgets
-        self.main_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.main_frame.grid(row=0, column=1, rowspan=4, sticky="nsew")
-
-        # create right frame with widgets
-        self.right_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
-        self.right_frame.grid(row=0, column=2, rowspan=4, sticky="nsew")
-        self.right_frame.grid_rowconfigure(4, weight=1)
-        
-
-        # create communcation frame with widgets
-        self.communication_frame = customtkinter.CTkFrame(self.right_frame, corner_radius=0)
-        self.communication_frame.grid(row=0, column=0, sticky="nsew")
-        # create load_data button
-        self.load_data_button = customtkinter.CTkButton(self.communication_frame, text="Load Data", command=self.sidebar_button_event)
-        self.load_data_button.grid(row=0, column=0, padx=20, pady=(20, 10))
-        # create run button
-        self.run_button = customtkinter.CTkButton(self.communication_frame, text="Run", command=self.sidebar_button_event)
-        self.run_button.grid(row=1, column=0, padx=20, pady=(20, 10))
-        # create abort button
-        self.abort_button = customtkinter.CTkButton(self.communication_frame, text="Abort", command=self.sidebar_button_event)
-        self.abort_button.grid(row=2, column=0, padx=20, pady=(20, 10))
-
-        # create status frame with widgets
-        self.status_frame = customtkinter.CTkFrame(self.right_frame, corner_radius=0)
-        self.status_frame.grid(row=1, column=0, sticky="nsew")
-        
-        # create status label
-        self.status_label = customtkinter.CTkLabel(self.status_frame, text="Status checklist: ", font=customtkinter.CTkFont(size=20, weight="bold"))
-        self.status_label.grid(row=0, column=0, padx=20, pady=(20, 10))
-        self.status_checkbox = []
-        for idx, item in enumerate(["Select Com Port", "Select File", "Set Priority", "Load Data To Tester", "Press Run Button", "Receiving Data", "Data Received", "Data Processing", "Data Processed", "Data Saving", "Data Saved"]):
-            # create status checkbox
-            self.status_checkbox.append(customtkinter.CTkCheckBox(self.status_frame, text=item, font=customtkinter.CTkFont(size=12), state="disabled", text_color_disabled="black",))
-            self.status_checkbox[-1].grid(row=idx+1, column=0, padx=20, pady=(10, 5), sticky="w")
-        
-        # create progress bar
-        self.progress_bar = customtkinter.CTkProgressBar(self.status_frame)
-        self.progress_bar.grid(row=1+len(self.status_checkbox), column=0, padx=20, pady=(20, 10), sticky="w")
-        self.progress_bar.set(0)
-
-        # # create sidebar frame with widgets
-        # self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
-        # self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        # self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        # self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="ThreadX Load Testing", font=customtkinter.CTkFont(size=20, weight="bold"))
-        # self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
-        # self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, command=self.sidebar_button_event)
-        # self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
-        # self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, command=self.sidebar_button_event)
-        # self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
-        # self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.sidebar_button_event)
-        # self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
-        # self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        # self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
-        # self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"],
-        #                                                                command=self.change_appearance_mode_event)
-        # self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
-        # self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="UI Scaling:", anchor="w")
-        # self.scaling_label.grid(row=7, column=0, padx=20, pady=(10, 0))
-        # self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["80%", "90%", "100%", "110%", "120%"],
-        #                                                        command=self.change_scaling_event)
-        # self.scaling_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 20))
-
-        # # create main entry and button
-        # self.entry = customtkinter.CTkEntry(self, placeholder_text="CTkEntry")
-        # self.entry.grid(row=3, column=1, columnspan=2, padx=(20, 0), pady=(20, 20), sticky="nsew")
-
-        # self.main_button_1 = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"))
-        # self.main_button_1.grid(row=3, column=3, padx=(20, 20), pady=(20, 20), sticky="nsew")
-
-        # # create textbox
-        # self.textbox = customtkinter.CTkTextbox(self, width=250)
-        # self.textbox.grid(row=0, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
-
-        # # create tabview
-        # self.tabview = customtkinter.CTkTabview(self, width=250)
-        # self.tabview.grid(row=0, column=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
-        # self.tabview.add("CTkTabview")
-        # self.tabview.add("Tab 2")
-        # self.tabview.add("Tab 3")
-        # self.tabview.tab("CTkTabview").grid_columnconfigure(0, weight=1)  # configure grid of individual tabs
-        # self.tabview.tab("Tab 2").grid_columnconfigure(0, weight=1)
-
-        # self.optionmenu_1 = customtkinter.CTkOptionMenu(self.tabview.tab("CTkTabview"), dynamic_resizing=False,
-        #                                                 values=["Value 1", "Value 2", "Value Long Long Long"])
-        # self.optionmenu_1.grid(row=0, column=0, padx=20, pady=(20, 10))
-        # self.combobox_1 = customtkinter.CTkComboBox(self.tabview.tab("CTkTabview"),
-        #                                             values=["Value 1", "Value 2", "Value Long....."])
-        # self.combobox_1.grid(row=1, column=0, padx=20, pady=(10, 10))
-        # self.string_input_button = customtkinter.CTkButton(self.tabview.tab("CTkTabview"), text="Open CTkInputDialog",
-        #                                                    command=self.open_input_dialog_event)
-        # self.string_input_button.grid(row=2, column=0, padx=20, pady=(10, 10))
-        # self.label_tab_2 = customtkinter.CTkLabel(self.tabview.tab("Tab 2"), text="CTkLabel on Tab 2")
-        # self.label_tab_2.grid(row=0, column=0, padx=20, pady=20)
-
-        # # create radiobutton frame
-        # self.radiobutton_frame = customtkinter.CTkFrame(self)
-        # self.radiobutton_frame.grid(row=0, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
-        # self.radio_var = tkinter.IntVar(value=0)
-        # self.label_radio_group = customtkinter.CTkLabel(master=self.radiobutton_frame, text="CTkRadioButton Group:")
-        # self.label_radio_group.grid(row=0, column=2, columnspan=1, padx=10, pady=10, sticky="")
-        # self.radio_button_1 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=0)
-        # self.radio_button_1.grid(row=1, column=2, pady=10, padx=20, sticky="n")
-        # self.radio_button_2 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=1)
-        # self.radio_button_2.grid(row=2, column=2, pady=10, padx=20, sticky="n")
-        # self.radio_button_3 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=2)
-        # self.radio_button_3.grid(row=3, column=2, pady=10, padx=20, sticky="n")
-
-        # # create checkbox and switch frame
-        # self.checkbox_slider_frame = customtkinter.CTkFrame(self)
-        # self.checkbox_slider_frame.grid(row=1, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
-        # self.checkbox_1 = customtkinter.CTkCheckBox(master=self.checkbox_slider_frame)
-        # self.checkbox_1.grid(row=1, column=0, pady=(20, 10), padx=20, sticky="n")
-        # self.checkbox_2 = customtkinter.CTkCheckBox(master=self.checkbox_slider_frame)
-        # self.checkbox_2.grid(row=2, column=0, pady=10, padx=20, sticky="n")
-        # self.switch_1 = customtkinter.CTkSwitch(master=self.checkbox_slider_frame, command=lambda: print("switch 1 toggle"))
-        # self.switch_1.grid(row=3, column=0, pady=10, padx=20, sticky="n")
-        # self.switch_2 = customtkinter.CTkSwitch(master=self.checkbox_slider_frame)
-        # self.switch_2.grid(row=4, column=0, pady=(10, 20), padx=20, sticky="n")
-
-        # # create slider and progressbar frame
-        # self.slider_progressbar_frame = customtkinter.CTkFrame(self, fg_color="transparent")
-        # self.slider_progressbar_frame.grid(row=1, column=1, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
-        # self.slider_progressbar_frame.grid_columnconfigure(0, weight=1)
-        # self.slider_progressbar_frame.grid_rowconfigure(4, weight=1)
-        # self.seg_button_1 = customtkinter.CTkSegmentedButton(self.slider_progressbar_frame)
-        # self.seg_button_1.grid(row=0, column=0, padx=(20, 10), pady=(10, 10), sticky="ew")
-        # self.progressbar_1 = customtkinter.CTkProgressBar(self.slider_progressbar_frame)
-        # self.progressbar_1.grid(row=1, column=0, padx=(20, 10), pady=(10, 10), sticky="ew")
-        # self.progressbar_2 = customtkinter.CTkProgressBar(self.slider_progressbar_frame)
-        # self.progressbar_2.grid(row=2, column=0, padx=(20, 10), pady=(10, 10), sticky="ew")
-        # self.slider_1 = customtkinter.CTkSlider(self.slider_progressbar_frame, from_=0, to=1, number_of_steps=4)
-        # self.slider_1.grid(row=3, column=0, padx=(20, 10), pady=(10, 10), sticky="ew")
-        # self.slider_2 = customtkinter.CTkSlider(self.slider_progressbar_frame, orientation="vertical")
-        # self.slider_2.grid(row=0, column=1, rowspan=5, padx=(10, 10), pady=(10, 10), sticky="ns")
-        # self.progressbar_3 = customtkinter.CTkProgressBar(self.slider_progressbar_frame, orientation="vertical")
-        # self.progressbar_3.grid(row=0, column=2, rowspan=5, padx=(10, 20), pady=(10, 10), sticky="ns")
-
-        # # set default values
-        # self.sidebar_button_3.configure(state="disabled", text="Disabled CTkButton")
-        # self.checkbox_2.configure(state="disabled")
-        # self.switch_2.configure(state="disabled")
-        # self.checkbox_1.select()
-        # self.switch_1.select()
-        # self.radio_button_3.configure(state="disabled")
-        # self.appearance_mode_optionemenu.set("Dark")
-        # self.scaling_optionemenu.set("100%")
-        # self.optionmenu_1.set("CTkOptionmenu")
-        # self.combobox_1.set("CTkComboBox")
-        # self.slider_1.configure(command=self.progressbar_2.set)
-        # self.slider_2.configure(command=self.progressbar_3.set)
-        # self.progressbar_1.configure(mode="indeterminnate")
-        # self.progressbar_1.start()
-        # self.textbox.insert("0.0", "CTkTextbox\n\n" + "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.\n\n" * 20)
-        # self.seg_button_1.configure(values=["CTkSegmentedButton", "Value 2", "Value 3"])
-        # self.seg_button_1.set("Value 2")
-
-    def open_input_dialog_event(self):
-        dialog = customtkinter.CTkInputDialog(text="Type in a number:", title="CTkInputDialog")
-        print("CTkInputDialog:", dialog.get_input())
-
-    def change_appearance_mode_event(self, new_appearance_mode: str):
-        customtkinter.set_appearance_mode(new_appearance_mode)
-
-    def change_scaling_event(self, new_scaling: str):
-        new_scaling_float = int(new_scaling.replace("%", "")) / 100
-        customtkinter.set_widget_scaling(new_scaling_float)
-
-    def sidebar_button_event(self):
-        print("sidebar_button click")
+                
 
 
 if __name__ == "__main__":
