@@ -1,5 +1,7 @@
 import glob
 import sys
+import threading
+import time
 import tkinter
 from tkinter import filedialog
 import serial
@@ -85,6 +87,10 @@ class App(customtkinter.CTk):
         self.log = customtkinter.CTkTextbox(self.main_frame, height=400, width=self.main_frame.cget("width"))
         self.log.grid(row=0, column=0, sticky="nsew")
 
+        # Progress bar widget for displaying the progress of the task
+        # self.progress = customtkinter.CTkProgressBar(self.main_frame)
+        # self.progress.grid(row=1, column=0, sticky="nsew")
+
         # Image widget for displaying the graph filling full  available space
         # self.graph = customtkinter.CTkImage(self.main_frame)
         # self.graph.grid(row=0, column=1, sticky="nsew")
@@ -105,7 +111,7 @@ class App(customtkinter.CTk):
         self.run_button = customtkinter.CTkButton(self.communication_frame, text="Run", command=self.run_test, state=tkinter.DISABLED)
         self.run_button.grid(row=1, column=0, padx=20, pady=(20, 10))
         # create save button
-        self.save_button = customtkinter.CTkButton(self.communication_frame, text="Save", command=self.show_statistics_windows, state=tkinter.DISABLED)
+        self.save_button = customtkinter.CTkButton(self.communication_frame, text="Save & Open Statistics", command=self.show_statistics_windows, state=tkinter.DISABLED)
         self.save_button.grid(row=2, column=0, padx=20, pady=(20, 10))
 
         # create status frame with widgets
@@ -183,6 +189,23 @@ class App(customtkinter.CTk):
 
 
     def run_test(self):
+        # # run _run_test in a new thread
+        # self.thread = threading.Thread(target=self._run_test)
+        # self.thread.start()
+        
+        # self.progress.configure(mode="indeterminnate")
+        # self.progress.start()
+        # # wait for thread to end
+        # self.thread.join()
+        
+        # self.progress.stop()
+
+        # # check if thread is alive
+        # # if self.thread.is_alive():
+        self._run_test()
+
+
+    def _run_test(self):
         # Send "Run" command to tester
         self.serial.write(bytes(b"Run\0"))
         while True:
@@ -222,7 +245,7 @@ class App(customtkinter.CTk):
         for line in data:
             self.serial.write(bytes(line[:-1] + '\0', 'utf-8'))
             self.len[line[0]] += 1
-        self.print(text = f"Data loaded to tester. UART4: {self.len['4']}, UART6: {self.len['6']}")
+        self.print(text = f"Data loaded to tester. UART4: {self.len['4']}, UART6: {self.len['6']}\n")
 
     def connect_to_com(self):
         self.print(f"Connecting to {self.com.get()} port.\n")
