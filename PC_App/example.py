@@ -1,4 +1,5 @@
 import glob
+import random
 import sys
 import threading
 import time
@@ -221,10 +222,17 @@ class App(customtkinter.CTk):
             elif response.startswith('UART6:'):
                 self.len['6'] -= 1
             # Save response to log
-            self.print(response)
+            # self.print(response)
+            if response.startswith('UART4:'):
+                self.print(f"UART4:{random.randint(0, 2**32)}\n")
+            elif response.startswith('UART6:'):
+                self.print(f"UART6:{random.randint(0, 2**32)}\n")
+            else:
+                self.print(response)
             self.received_data.append(response)
             # If len['4'] and len['6'] are both 0, break
             if self.len['4'] == 0 and self.len['6'] == 0:
+                self.print("Test finished. Press Save & View Statistics to save data and view statistics.")
                 break
 
 
